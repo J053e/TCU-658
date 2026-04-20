@@ -1,0 +1,55 @@
+{
+  "game_title": "English Passport: Here I Am!",
+  "intro": "Welcome to the School. Today is your first day and you are the new student, talk to people!",
+  "objective": "Collect 5 stamps to complete your English Passport.",
+  "zones": [
+    {
+      "id": "school_gate",
+      "title": "School Gate",
+      "description": "Choose the best greeting or farewell for each situation.",
+      "minigames": [
+        "Choose the Greeting",
+        "Choose the Best Response"
+      ]
+    },
+    {
+      "id": "classroom_survival",
+      "title": "Classroom Survival",
+      "description": "Read or listen and follow simple classroom instructions.",
+      "minigames": [
+        "Read / Listen and Click",
+        "Classroom Language"
+      ]
+    },
+    {
+      "id": "meet_classmates",
+      "title": "Meet Your Classmates",
+      "description": "Build short dialogues, choose questions, and use polite expressions.",
+      "minigames": [
+        "Order the Dialogue",
+        "Choose the Question",
+        "Politeness Fix"
+      ]
+    },
+    {
+      "id": "my_school_card",
+      "title": "My School Card",
+      "description": "Complete your profile and simple personal sentences.",
+      "minigames": [
+        "Fill the Profile",
+        "Label the Classroom",
+        "Simple Personal Sentences"
+      ]
+    },
+    {
+      "id": "final_passport",
+      "title": "Final Passport Challenge",
+      "description": "Build your final introduction with valid blocks.",
+      "minigames": [
+        "Build Your Intro",
+        "Read the Final Passport"
+      ]
+    }
+  ]
+}
+
