@@ -2,6 +2,8 @@ extends Node
 
 const SAVE_PATH := "user://savegame.json"
 const CONTENT_PATH := "res://data/game_content.json"
+const GLOBAL_ICONS_DIR := "res://assets/branding/global_icons"
+const CLICK_SFX_PATH := "res://assets/audio/sfx/ui_click.wav"
 
 var content := {}
 var current_zone_id := ""
@@ -14,11 +16,32 @@ var profile := {
 	"country": "Costa Rica",
 	"town": ""
 }
+var ui_click_player: AudioStreamPlayer
+var pretty_font: SystemFont
 
 func _ready() -> void:
 	load_content()
 	_initialize_stamps()
 	load_progress()
+	_initialize_fonts()
+	_initialize_ui_sfx()
+
+func _initialize_fonts() -> void:
+	pretty_font = SystemFont.new()
+	pretty_font.font_names = PackedStringArray([
+		"Trebuchet MS",
+		"Segoe UI",
+		"Calibri",
+		"Verdana"
+	])
+
+func _initialize_ui_sfx() -> void:
+	ui_click_player = AudioStreamPlayer.new()
+	ui_click_player.name = "UIClickPlayer"
+	ui_click_player.volume_db = -8.0
+	if ResourceLoader.exists(CLICK_SFX_PATH):
+		ui_click_player.stream = load(CLICK_SFX_PATH)
+	add_child(ui_click_player)
 
 func load_content() -> void:
 	if not FileAccess.file_exists(CONTENT_PATH):
@@ -107,3 +130,172 @@ func load_progress() -> void:
 		for key in payload_dict["profile"].keys():
 			if profile.has(key):
 				profile[key] = payload_dict["profile"][key]
+
+func decorate_screen(root: Control, background_path: String = "") -> void:
+	_add_background(root, background_path)
+	_add_global_icons(root)
+
+func _add_background(root: Control, background_path: String) -> void:
+	if background_path == "" or not ResourceLoader.exists(background_path):
+		return
+	var bg := TextureRect.new()
+	bg.name = "Background"
+	bg.layout_mode = 1
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg.texture = load(background_path)
+	root.add_child(bg)
+	root.move_child(bg, 0)
+
+func _add_global_icons(root: Control) -> void:
+	var overlay := Control.new()
+	overlay.name = "GlobalBrandingOverlay"
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(overlay)
+
+	var icon_box := HBoxContainer.new()
+	icon_box.name = "GlobalIcons"
+	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon_box.add_theme_constant_override("separation", 10)
+	icon_box.anchor_left = 0.0
+	icon_box.anchor_right = 0.0
+	icon_box.offset_left = 12
+	icon_box.offset_top = 12
+	icon_box.offset_right = 332
+	icon_box.offset_bottom = 96
+	overlay.add_child(icon_box)
+
+	var icon_paths := [
+		"%s/tcu658.png" % GLOBAL_ICONS_DIR,
+		"%s/elm.png" % GLOBAL_ICONS_DIR,
+		_get_ucr_icon_path()
+	]
+
+	for path in icon_paths:
+		if path == "" or not ResourceLoader.exists(path):
+			continue
+		var texture := load(path)
+		if texture == null:
+			continue
+		var rect := TextureRect.new()
+		rect.texture = texture
+		var fitted_size := _fit_icon_size(texture.get_size(), 151.0, 70.0)
+		rect.custom_minimum_size = fitted_size
+		rect.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		rect.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_box.add_child(rect)
+
+func _fit_icon_size(original: Vector2, max_width: float, max_height: float) -> Vector2:
+	if original.x <= 0.0 or original.y <= 0.0:
+		return Vector2(max_width, max_height)
+	var ratio: float = minf(max_width / original.x, max_height / original.y)
+	return Vector2(original.x * ratio, original.y * ratio)
+
+func _get_ucr_icon_path() -> String:
+	var preferred := "%s/ucr.png" % GLOBAL_ICONS_DIR
+	if ResourceLoader.exists(preferred):
+		return preferred
+
+	var dir := DirAccess.open(GLOBAL_ICONS_DIR)
+	if dir == null:
+		return ""
+	dir.list_dir_begin()
+	while true:
+		var file_name := dir.get_next()
+		if file_name == "":
+			break
+		if dir.current_is_dir():
+			continue
+		var low := file_name.to_lower()
+		if low.begins_with("ucr") and (low.ends_with(".png") or low.ends_with(".jpg") or low.ends_with(".jpeg")):
+			dir.list_dir_end()
+			return "%s/%s" % [GLOBAL_ICONS_DIR, file_name]
+	dir.list_dir_end()
+	return ""
+
+func style_menu_button(button: Button, palette: String = "blue") -> void:
+	var base_color := Color(0.22, 0.56, 0.95)
+	var border_color := Color(0.75, 0.92, 1.0)
+	var hover_color := Color(0.30, 0.62, 1.0)
+	var pressed_color := Color(0.14, 0.46, 0.86)
+
+	match palette:
+		"pink":
+			base_color = Color(0.90, 0.32, 0.86)
+			border_color = Color(1.0, 0.80, 0.98)
+			hover_color = Color(0.96, 0.44, 0.92)
+			pressed_color = Color(0.78, 0.20, 0.74)
+		"yellow":
+			base_color = Color(0.95, 0.78, 0.25)
+			border_color = Color(1.0, 0.94, 0.68)
+			hover_color = Color(1.0, 0.84, 0.35)
+			pressed_color = Color(0.90, 0.70, 0.16)
+		"orange":
+			base_color = Color(0.96, 0.45, 0.24)
+			border_color = Color(1.0, 0.80, 0.70)
+			hover_color = Color(1.0, 0.53, 0.34)
+			pressed_color = Color(0.86, 0.34, 0.14)
+		"green":
+			base_color = Color(0.42, 0.78, 0.33)
+			border_color = Color(0.84, 1.0, 0.76)
+			hover_color = Color(0.52, 0.86, 0.43)
+			pressed_color = Color(0.32, 0.64, 0.24)
+		"purple":
+			base_color = Color(0.52, 0.43, 0.93)
+			border_color = Color(0.87, 0.82, 1.0)
+			hover_color = Color(0.61, 0.53, 0.98)
+			pressed_color = Color(0.42, 0.33, 0.83)
+
+	var normal := _make_button_style(base_color, border_color)
+	var hover := _make_button_style(hover_color, border_color.lightened(0.08))
+	var pressed := _make_button_style(pressed_color, border_color.darkened(0.1))
+
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("focus", hover)
+	button.add_theme_color_override("font_color", Color(1, 1, 1))
+	button.add_theme_color_override("font_hover_color", Color(1, 1, 1))
+	button.add_theme_color_override("font_pressed_color", Color(1, 1, 1))
+	button.add_theme_constant_override("outline_size", 1)
+	button.custom_minimum_size = Vector2(maxf(button.custom_minimum_size.x, 170.0), maxf(button.custom_minimum_size.y, 52.0))
+	button.add_theme_font_override("font", pretty_font)
+	button.add_theme_font_size_override("font_size", 30)
+	if not button.has_meta("_click_hooked"):
+		button.set_meta("_click_hooked", true)
+		button.pressed.connect(_on_menu_button_pressed)
+
+func _make_button_style(fill_color: Color, line_color: Color) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = fill_color
+	sb.border_color = line_color
+	sb.set_border_width_all(3)
+	sb.corner_radius_top_left = 24
+	sb.corner_radius_top_right = 24
+	sb.corner_radius_bottom_right = 24
+	sb.corner_radius_bottom_left = 24
+	sb.shadow_color = Color(0, 0, 0, 0.25)
+	sb.shadow_size = 4
+	sb.shadow_offset = Vector2(0, 2)
+	sb.anti_aliasing = true
+	sb.anti_aliasing_size = 1.0
+	sb.set_content_margin_all(10)
+	return sb
+
+func _on_menu_button_pressed() -> void:
+	if ui_click_player != null and ui_click_player.stream != null:
+		ui_click_player.stop()
+		ui_click_player.play()
+
+func style_label(label: Label, font_size: int = 28, with_outline: bool = false) -> void:
+	label.add_theme_font_override("font", pretty_font)
+	label.add_theme_font_size_override("font_size", font_size)
+	if with_outline:
+		label.add_theme_color_override("font_outline_color", Color(0.07, 0.10, 0.30))
+		label.add_theme_constant_override("outline_size", 4)

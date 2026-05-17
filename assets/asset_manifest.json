@@ -1,0 +1,11 @@
+﻿{
+  "required_global_icons": [
+    "assets/branding/global_icons/elm.png",
+    "assets/branding/global_icons/tcu658.png",
+    "assets/branding/global_icons/ucr.png"
+  ],
+  "notes": [
+    "Keep these three icons available in all builds.",
+    "Use assets/shared for reusable art across zones."
+  ]
+}

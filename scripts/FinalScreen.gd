@@ -7,6 +7,8 @@ func _ready() -> void:
 	_render_summary()
 
 func _build_ui() -> void:
+	GameState.decorate_screen(self)
+
 	var center := CenterContainer.new()
 	center.name = "Center"
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -23,11 +25,13 @@ func _build_ui() -> void:
 	var title := Label.new()
 	title.text = "My English Passport"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	GameState.style_label(title, 38, true)
 	root_vbox.add_child(title)
 
 	result_label = Label.new()
 	result_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	GameState.style_label(result_label, 22, false)
 	root_vbox.add_child(result_label)
 
 	var actions := HBoxContainer.new()
@@ -36,11 +40,13 @@ func _build_ui() -> void:
 
 	var play_again := Button.new()
 	play_again.text = "Play Again"
+	GameState.style_menu_button(play_again, "green")
 	play_again.pressed.connect(_on_PlayAgainButton_pressed)
 	actions.add_child(play_again)
 
 	var main_menu := Button.new()
 	main_menu.text = "Main Menu"
+	GameState.style_menu_button(main_menu, "purple")
 	main_menu.pressed.connect(_on_BackToMenuButton_pressed)
 	actions.add_child(main_menu)
 

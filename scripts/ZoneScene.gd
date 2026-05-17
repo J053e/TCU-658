@@ -14,6 +14,8 @@ func _ready() -> void:
 	_render_zone()
 
 func _build_ui() -> void:
+	GameState.decorate_screen(self)
+
 	var center := CenterContainer.new()
 	center.name = "Center"
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -30,17 +32,20 @@ func _build_ui() -> void:
 	zone_title = Label.new()
 	zone_title.text = "Zone Title"
 	zone_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	GameState.style_label(zone_title, 36, true)
 	root_vbox.add_child(zone_title)
 
 	zone_description = Label.new()
 	zone_description.text = "Zone description."
 	zone_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	zone_description.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	GameState.style_label(zone_description, 22, false)
 	root_vbox.add_child(zone_description)
 
 	var minigame_title := Label.new()
 	minigame_title.text = "Minigames"
 	minigame_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	GameState.style_label(minigame_title, 28, false)
 	root_vbox.add_child(minigame_title)
 
 	minigames_list = ItemList.new()
@@ -50,6 +55,7 @@ func _build_ui() -> void:
 	status_label = Label.new()
 	status_label.text = "Complete this zone to earn your stamp."
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	GameState.style_label(status_label, 21, false)
 	root_vbox.add_child(status_label)
 
 	var actions := HBoxContainer.new()
@@ -58,11 +64,13 @@ func _build_ui() -> void:
 
 	complete_button = Button.new()
 	complete_button.text = "Complete Zone"
+	GameState.style_menu_button(complete_button, "green")
 	complete_button.pressed.connect(_on_CompleteButton_pressed)
 	actions.add_child(complete_button)
 
 	var back_button := Button.new()
 	back_button.text = "Back"
+	GameState.style_menu_button(back_button, "orange")
 	back_button.pressed.connect(_on_BackButton_pressed)
 	actions.add_child(back_button)
 

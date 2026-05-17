@@ -3,6 +3,7 @@ extends Control
 var progress_label: Label
 var final_screen_button: Button
 var zone_buttons := {}
+const WORLD_MAP_BG_PATH := "res://assets/ui/backgrounds/world_map_bg.png"
 
 func _ready() -> void:
 	_build_ui()
@@ -10,6 +11,8 @@ func _ready() -> void:
 	_refresh()
 
 func _build_ui() -> void:
+	GameState.decorate_screen(self, WORLD_MAP_BG_PATH)
+
 	var center := CenterContainer.new()
 	center.name = "Center"
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -26,11 +29,13 @@ func _build_ui() -> void:
 	var header := Label.new()
 	header.text = "Choose a Zone"
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	GameState.style_label(header, 34, true)
 	root_vbox.add_child(header)
 
 	progress_label = Label.new()
 	progress_label.text = "Stamps: 0/5"
 	progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	GameState.style_label(progress_label, 24, false)
 	root_vbox.add_child(progress_label)
 
 	_add_zone_button(root_vbox, "school_gate", "1. School Gate")
@@ -45,22 +50,28 @@ func _build_ui() -> void:
 
 	var save_button := Button.new()
 	save_button.text = "Save"
+	GameState.style_menu_button(save_button, "yellow")
 	save_button.pressed.connect(_on_SaveButton_pressed)
 	actions.add_child(save_button)
 
 	final_screen_button = Button.new()
 	final_screen_button.text = "Final Screen"
+	GameState.style_menu_button(final_screen_button, "green")
 	final_screen_button.pressed.connect(_on_FinalScreenButton_pressed)
 	actions.add_child(final_screen_button)
 
 	var back_button := Button.new()
 	back_button.text = "Back"
+	GameState.style_menu_button(back_button, "orange")
 	back_button.pressed.connect(_on_BackButton_pressed)
 	actions.add_child(back_button)
 
 func _add_zone_button(container: VBoxContainer, zone_id: String, label: String) -> void:
 	var button := Button.new()
 	button.text = label
+	var palettes := ["blue", "pink", "yellow", "green", "purple"]
+	var idx := int(zone_buttons.size()) % palettes.size()
+	GameState.style_menu_button(button, palettes[idx])
 	button.pressed.connect(_on_zone_pressed.bind(zone_id))
 	container.add_child(button)
 	zone_buttons[zone_id] = {
