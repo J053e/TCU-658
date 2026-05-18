@@ -19,11 +19,11 @@
       "id": "q02_student_arrive",
       "prompt": "A student says hello as you arrive.",
       "options": [
-        "Hi!",
         "Good night.",
+        "Hi!",
         "Thank you."
       ],
-      "correct_index": 0,
+      "correct_index": 1,
       "correct_feedback": "Nice!",
       "incorrect_feedback": "Oops! Check the situation again.",
       "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q02_student_arrive.png"
@@ -32,11 +32,11 @@
       "id": "q03_leaving_gate",
       "prompt": "You are leaving the school gate after class.",
       "options": [
-        "Bye!",
         "Good morning.",
-        "Please."
+        "Please.",
+        "Bye!"
       ],
-      "correct_index": 0,
+      "correct_index": 2,
       "correct_feedback": "Well done!",
       "incorrect_feedback": "Remember, you are leaving. Choose a farewell!",
       "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q03_leaving_gate.png"
@@ -71,11 +71,11 @@
       "id": "q06_teacher_good_morning",
       "prompt": "Teacher: Good morning!",
       "options": [
-        "Good morning!",
         "Bye!",
-        "Open your notebook."
+        "Open your notebook.",
+        "Good morning!"
       ],
-      "correct_index": 0,
+      "correct_index": 2,
       "correct_feedback": "Great start!",
       "incorrect_feedback": "Not quite. Try again!",
       "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q06_teacher_good_morning.png"
@@ -84,11 +84,11 @@
       "id": "q07_student_hi",
       "prompt": "Student: Hi!",
       "options": [
-        "Hi!",
         "Sit down.",
-        "Thank you."
+        "Thank you.",
+        "Hi!"
       ],
-      "correct_index": 0,
+      "correct_index": 2,
       "correct_feedback": "Nice! Friendly and simple.",
       "incorrect_feedback": "Not quite. Try again!",
       "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q07_student_hi.png"
@@ -97,11 +97,11 @@
       "id": "q08_guard_goodbye",
       "prompt": "Security guard: Goodbye!",
       "options": [
-        "Goodbye!",
         "Good morning!",
+        "Goodbye!",
         "Please."
       ],
-      "correct_index": 0,
+      "correct_index": 1,
       "correct_feedback": "Perfect! You're ready to go.",
       "incorrect_feedback": "The guard is saying goodbye. How do you say it back?",
       "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q08_guard_goodbye.png"
@@ -123,11 +123,11 @@
       "id": "q10_classmate_sorry",
       "prompt": "Classmate: I'm sorry.",
       "options": [
-        "That's okay.",
         "Good afternoon.",
+        "That's okay.",
         "Close the door."
       ],
-      "correct_index": 0,
+      "correct_index": 1,
       "correct_feedback": "Well done! You are very kind.",
       "incorrect_feedback": "Your classmate is apologizing. Try again!",
       "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q10_classmate_sorry.png"
