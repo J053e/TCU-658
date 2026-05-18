@@ -1,13 +1,33 @@
-extends Control
+﻿extends Control
+
+const FINAL_BG_PATH := "res://assets/ui/backgrounds/final_screen_bg.png"
+const ZONE_ORDER := [
+	"school_gate",
+	"classroom_survival",
+	"meet_classmates",
+	"my_school_card",
+	"final_passport"
+]
+const BADGE_PATHS := {
+	"school_gate": "res://assets/ui/badges/medal_01.png",
+	"classroom_survival": "res://assets/ui/badges/medal_02.png",
+	"meet_classmates": "res://assets/ui/badges/medal_03.png",
+	"my_school_card": "res://assets/ui/badges/medal_04.png",
+	"final_passport": "res://assets/ui/badges/medal_05.png"
+}
 
 var result_label: Label
+var badge_slots := {}
+var badge_gray_material: ShaderMaterial
 
 func _ready() -> void:
 	_build_ui()
 	_render_summary()
+	_update_badges()
+	GameState.play_enter_transition(self)
 
 func _build_ui() -> void:
-	GameState.decorate_screen(self)
+	GameState.decorate_screen(self, FINAL_BG_PATH)
 
 	var center := CenterContainer.new()
 	center.name = "Center"
@@ -18,14 +38,14 @@ func _build_ui() -> void:
 	root_vbox.name = "VBox"
 	root_vbox.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	root_vbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	root_vbox.custom_minimum_size = Vector2(820, 420)
-	root_vbox.add_theme_constant_override("separation", 12)
+	root_vbox.custom_minimum_size = Vector2(980, 500)
+	root_vbox.add_theme_constant_override("separation", 14)
 	center.add_child(root_vbox)
 
 	var title := Label.new()
 	title.text = "My English Passport"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	GameState.style_label(title, 38, true)
+	GameState.style_label(title, 40, true)
 	root_vbox.add_child(title)
 
 	result_label = Label.new()
@@ -34,8 +54,17 @@ func _build_ui() -> void:
 	GameState.style_label(result_label, 22, false)
 	root_vbox.add_child(result_label)
 
+	var badges_title := Label.new()
+	badges_title.text = "Your Medals"
+	badges_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	GameState.style_label(badges_title, 28, true)
+	root_vbox.add_child(badges_title)
+
+	_add_badges_row(root_vbox)
+
 	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 12)
+	actions.add_theme_constant_override("separation", 16)
+	actions.alignment = BoxContainer.ALIGNMENT_CENTER
 	root_vbox.add_child(actions)
 
 	var play_again := Button.new()
@@ -51,30 +80,78 @@ func _build_ui() -> void:
 	actions.add_child(main_menu)
 
 func _render_summary() -> void:
-	var lines := []
-	var completed := GameState.completed_count()
-	var total := GameState.total_stamps()
-
 	if GameState.all_zones_completed():
-		lines.append("Congratulations! You completed your English Passport.")
+		result_label.text = "Congratulations! You completed your English Passport."
 	else:
-		lines.append("You still need to complete all zones before final completion.")
-	lines.append("")
-	lines.append("Stamps collected: %d/%d" % [completed, total])
-	lines.append("School Gate: %s" % _done("school_gate"))
-	lines.append("Classroom Survival: %s" % _done("classroom_survival"))
-	lines.append("Meet Your Classmates: %s" % _done("meet_classmates"))
-	lines.append("My School Card: %s" % _done("my_school_card"))
-	lines.append("Final Passport Challenge: %s" % _done("final_passport"))
+		result_label.text = "You still need to complete all zones before final completion."
 
-	result_label.text = "\n".join(lines)
+func _add_badges_row(container: VBoxContainer) -> void:
+	var badges_row := HBoxContainer.new()
+	badges_row.add_theme_constant_override("separation", 16)
+	badges_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	container.add_child(badges_row)
 
-func _done(zone_id: String) -> String:
-	return "Done" if GameState.is_zone_completed(zone_id) else "Pending"
+	for zone_id in ZONE_ORDER:
+		var frame := PanelContainer.new()
+		frame.add_theme_stylebox_override("panel", _badge_frame_style())
+		badges_row.add_child(frame)
+
+		var inner_margin := MarginContainer.new()
+		inner_margin.add_theme_constant_override("margin_left", 8)
+		inner_margin.add_theme_constant_override("margin_top", 8)
+		inner_margin.add_theme_constant_override("margin_right", 8)
+		inner_margin.add_theme_constant_override("margin_bottom", 8)
+		frame.add_child(inner_margin)
+
+		var badge := TextureRect.new()
+		badge.custom_minimum_size = Vector2(92, 92)
+		badge.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		badge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		var texture_path: String = String(BADGE_PATHS.get(zone_id, ""))
+		if texture_path != "" and ResourceLoader.exists(texture_path):
+			badge.texture = load(texture_path)
+		inner_margin.add_child(badge)
+		badge_slots[zone_id] = badge
+
+func _badge_frame_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.10, 0.12, 0.26, 0.72)
+	sb.border_color = Color(0.98, 0.95, 0.55, 1.0)
+	sb.set_border_width_all(3)
+	sb.corner_radius_top_left = 16
+	sb.corner_radius_top_right = 16
+	sb.corner_radius_bottom_right = 16
+	sb.corner_radius_bottom_left = 16
+	sb.shadow_color = Color(1.0, 0.90, 0.30, 0.55)
+	sb.shadow_size = 8
+	sb.shadow_offset = Vector2(0, 0)
+	sb.set_content_margin_all(0)
+	return sb
+
+func _update_badges() -> void:
+	var gray_material: ShaderMaterial = _gray_material()
+	for zone_id in ZONE_ORDER:
+		if not badge_slots.has(zone_id):
+			continue
+		var badge: TextureRect = badge_slots[zone_id]
+		if GameState.is_zone_completed(zone_id):
+			badge.material = null
+		else:
+			badge.material = gray_material
+
+func _gray_material() -> ShaderMaterial:
+	if badge_gray_material != null:
+		return badge_gray_material
+	var shader := Shader.new()
+	shader.code = "shader_type canvas_item;\nvoid fragment(){\n\tvec4 c = texture(TEXTURE, UV);\n\tfloat g = dot(c.rgb, vec3(0.299, 0.587, 0.114));\n\tCOLOR = vec4(vec3(g), c.a);\n}\n"
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	badge_gray_material = mat
+	return badge_gray_material
 
 func _on_PlayAgainButton_pressed() -> void:
 	GameState.reset_progress()
-	get_tree().change_scene_to_file("res://scenes/WorldMap.tscn")
+	GameState.change_scene_with_transition("res://scenes/WorldMap.tscn")
 
 func _on_BackToMenuButton_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+	GameState.change_scene_with_transition("res://scenes/MainMenu.tscn", true)

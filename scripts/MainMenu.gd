@@ -5,6 +5,7 @@ const MENU_BG_PATH := "res://assets/ui/backgrounds/main_menu_bg.png"
 func _ready() -> void:
 	_build_ui()
 	GameState.load_progress()
+	GameState.play_enter_transition(self)
 
 func _build_ui() -> void:
 	GameState.decorate_screen(self, MENU_BG_PATH)
@@ -48,10 +49,10 @@ func _build_ui() -> void:
 
 func _on_NewGameButton_pressed() -> void:
 	GameState.reset_progress()
-	get_tree().change_scene_to_file("res://scenes/IntroScreen.tscn")
+	GameState.change_scene_with_transition("res://scenes/IntroScreen.tscn")
 
 func _on_ContinueButton_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/WorldMap.tscn")
+	GameState.change_scene_with_transition("res://scenes/WorldMap.tscn")
 
 func _on_ExitButton_pressed() -> void:
 	get_tree().quit()

@@ -2,6 +2,7 @@ extends Node
 
 const SAVE_PATH := "user://savegame.json"
 const CONTENT_PATH := "res://data/game_content.json"
+const BACKGROUND_MANIFEST_PATH := "res://data/backgrounds_manifest.json"
 const GLOBAL_ICONS_DIR := "res://assets/branding/global_icons"
 const CLICK_SFX_PATH := "res://assets/audio/sfx/ui_click.wav"
 
@@ -18,13 +19,27 @@ var profile := {
 }
 var ui_click_player: AudioStreamPlayer
 var pretty_font: SystemFont
+var background_manifest: Dictionary = {}
+var is_scene_transitioning: bool = false
 
 func _ready() -> void:
 	load_content()
+	load_background_manifest()
 	_initialize_stamps()
 	load_progress()
 	_initialize_fonts()
 	_initialize_ui_sfx()
+
+func load_background_manifest() -> void:
+	background_manifest.clear()
+	if not FileAccess.file_exists(BACKGROUND_MANIFEST_PATH):
+		return
+	var file := FileAccess.open(BACKGROUND_MANIFEST_PATH, FileAccess.READ)
+	if file == null:
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if typeof(parsed) == TYPE_DICTIONARY:
+		background_manifest = parsed as Dictionary
 
 func _initialize_fonts() -> void:
 	pretty_font = SystemFont.new()
@@ -299,3 +314,90 @@ func style_label(label: Label, font_size: int = 28, with_outline: bool = false) 
 	if with_outline:
 		label.add_theme_color_override("font_outline_color", Color(0.07, 0.10, 0.30))
 		label.add_theme_constant_override("outline_size", 4)
+
+func get_zone_screen_background(zone_id: String) -> String:
+	var zones: Dictionary = background_manifest.get("zones", {})
+	if not zones.has(zone_id):
+		return ""
+	var zone_data: Dictionary = zones[zone_id]
+	var path: String = String(zone_data.get("zone_screen", ""))
+	return path
+
+func get_minigame_background(zone_id: String, minigame_id: String) -> String:
+	var zones: Dictionary = background_manifest.get("zones", {})
+	if not zones.has(zone_id):
+		return ""
+	var zone_data: Dictionary = zones[zone_id]
+	var minigames: Dictionary = zone_data.get("minigames", {})
+	var path: String = String(minigames.get(minigame_id, ""))
+	return path
+
+func play_enter_transition(root: Control) -> void:
+	await get_tree().process_frame
+	if root == null or not is_instance_valid(root):
+		return
+	root.pivot_offset = root.size * 0.5
+	root.scale = Vector2(0.92, 0.92)
+	var tween := get_tree().create_tween()
+	tween.tween_property(root, "scale", Vector2.ONE, 0.24).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+func change_scene_with_transition(scene_path: String, is_back: bool = false) -> void:
+	if is_scene_transitioning:
+		return
+	is_scene_transitioning = true
+
+	var overlay_layer: CanvasLayer = null
+	var overlay_rect: TextureRect = null
+	var captured := await _create_transition_overlay()
+	if typeof(captured) == TYPE_DICTIONARY and captured.has("layer") and captured.has("rect"):
+		overlay_layer = captured["layer"]
+		overlay_rect = captured["rect"]
+
+	var err: int = get_tree().change_scene_to_file(scene_path)
+	if err != OK:
+		push_error("Could not change scene to: " + scene_path)
+		if overlay_layer != null and is_instance_valid(overlay_layer):
+			overlay_layer.queue_free()
+		is_scene_transitioning = false
+		return
+
+	if overlay_rect != null and is_instance_valid(overlay_rect):
+		await get_tree().process_frame
+		overlay_rect.pivot_offset = overlay_rect.size * 0.5
+		overlay_rect.scale = Vector2.ONE
+		overlay_rect.modulate = Color(1, 1, 1, 1)
+		var end_scale: Vector2 = Vector2(0.92, 0.92) if is_back else Vector2(1.06, 1.06)
+		var tween := get_tree().create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(overlay_rect, "scale", end_scale, 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(overlay_rect, "modulate:a", 0.0, 0.20)
+		await tween.finished
+		if overlay_layer != null and is_instance_valid(overlay_layer):
+			overlay_layer.queue_free()
+	is_scene_transitioning = false
+
+func _create_transition_overlay() -> Dictionary:
+	await RenderingServer.frame_post_draw
+	var viewport_tex := get_viewport().get_texture()
+	if viewport_tex == null:
+		return {}
+	var image: Image = viewport_tex.get_image()
+	if image == null or image.is_empty():
+		return {}
+
+	var image_texture := ImageTexture.create_from_image(image)
+	var layer := CanvasLayer.new()
+	layer.layer = 100
+	get_tree().root.add_child(layer)
+
+	var rect := TextureRect.new()
+	rect.name = "TransitionOverlay"
+	rect.texture = image_texture
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	rect.stretch_mode = TextureRect.STRETCH_SCALE
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(rect)
+	return {
+		"layer": layer,
+		"rect": rect
+	}

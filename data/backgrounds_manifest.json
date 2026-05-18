@@ -1,0 +1,41 @@
+﻿{
+  "zones": {
+    "school_gate": {
+      "zone_screen": "res://assets/zones/zone_01_school_gate/backgrounds/zone_screen.png",
+      "minigames": {
+        "choose_greeting": "res://assets/zones/zone_01_school_gate/backgrounds/minigames/choose_greeting.png",
+        "choose_best_response": "res://assets/zones/zone_01_school_gate/backgrounds/minigames/choose_best_response.png"
+      }
+    },
+    "classroom_survival": {
+      "zone_screen": "res://assets/zones/zone_02_classroom_survival/backgrounds/zone_screen.png",
+      "minigames": {
+        "read_listen_click": "res://assets/zones/zone_02_classroom_survival/backgrounds/minigames/read_listen_click.png",
+        "classroom_language": "res://assets/zones/zone_02_classroom_survival/backgrounds/minigames/classroom_language.png"
+      }
+    },
+    "meet_classmates": {
+      "zone_screen": "res://assets/zones/zone_03_meet_classmates/backgrounds/zone_screen.png",
+      "minigames": {
+        "order_dialogue": "res://assets/zones/zone_03_meet_classmates/backgrounds/minigames/order_dialogue.png",
+        "choose_question": "res://assets/zones/zone_03_meet_classmates/backgrounds/minigames/choose_question.png",
+        "politeness_fix": "res://assets/zones/zone_03_meet_classmates/backgrounds/minigames/politeness_fix.png"
+      }
+    },
+    "my_school_card": {
+      "zone_screen": "res://assets/zones/zone_04_my_school_card/backgrounds/zone_screen.png",
+      "minigames": {
+        "fill_profile": "res://assets/zones/zone_04_my_school_card/backgrounds/minigames/fill_profile.png",
+        "label_classroom": "res://assets/zones/zone_04_my_school_card/backgrounds/minigames/label_classroom.png",
+        "personal_sentences": "res://assets/zones/zone_04_my_school_card/backgrounds/minigames/personal_sentences.png"
+      }
+    },
+    "final_passport": {
+      "zone_screen": "res://assets/zones/zone_05_final_passport/backgrounds/zone_screen.png",
+      "minigames": {
+        "build_intro": "res://assets/zones/zone_05_final_passport/backgrounds/minigames/build_intro.png",
+        "read_passport": "res://assets/zones/zone_05_final_passport/backgrounds/minigames/read_passport.png"
+      }
+    }
+  }
+}

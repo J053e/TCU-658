@@ -4,6 +4,7 @@ const INTRO_BG_PATH := "res://assets/ui/backgrounds/intro_screen_bg.png"
 
 func _ready() -> void:
 	_build_ui()
+	GameState.play_enter_transition(self)
 
 func _build_ui() -> void:
 	GameState.decorate_screen(self, INTRO_BG_PATH)
@@ -55,7 +56,7 @@ func _build_ui() -> void:
 	actions.add_child(back_button)
 
 func _on_Start_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/WorldMap.tscn")
+	GameState.change_scene_with_transition("res://scenes/WorldMap.tscn")
 
 func _on_Back_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+	GameState.change_scene_with_transition("res://scenes/MainMenu.tscn", true)

@@ -9,12 +9,13 @@ var complete_button: Button
 var zone := {}
 
 func _ready() -> void:
-	_build_ui()
 	zone = GameState.get_zone(GameState.current_zone_id)
+	_build_ui()
 	_render_zone()
+	GameState.play_enter_transition(self)
 
 func _build_ui() -> void:
-	GameState.decorate_screen(self)
+	GameState.decorate_screen(self, GameState.get_zone_screen_background(GameState.current_zone_id))
 
 	var center := CenterContainer.new()
 	center.name = "Center"
@@ -60,6 +61,8 @@ func _build_ui() -> void:
 
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 12)
+	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.alignment = BoxContainer.ALIGNMENT_CENTER
 	root_vbox.add_child(actions)
 
 	complete_button = Button.new()
@@ -104,4 +107,4 @@ func _on_CompleteButton_pressed() -> void:
 	complete_button.disabled = true
 
 func _on_BackButton_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/WorldMap.tscn")
+	GameState.change_scene_with_transition("res://scenes/WorldMap.tscn", true)
