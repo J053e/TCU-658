@@ -76,7 +76,7 @@ func _build_ui() -> void:
 	root.add_child(options_top_spacer)
 
 	options_box = VBoxContainer.new()
-	options_box.add_theme_constant_override("separation", 8)
+	options_box.add_theme_constant_override("separation", 6)
 	root.add_child(options_box)
 	for i in range(3):
 		var button := Button.new()
@@ -89,7 +89,7 @@ func _build_ui() -> void:
 	feedback_label = Label.new()
 	feedback_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	feedback_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	feedback_label.custom_minimum_size = Vector2(0, 22)
+	feedback_label.custom_minimum_size = Vector2(0, 10)
 	feedback_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	feedback_label.clip_text = true
 	GameState.style_label(feedback_label, 20, true)
@@ -103,7 +103,7 @@ func _build_ui() -> void:
 	var actions := HBoxContainer.new()
 	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.alignment = BoxContainer.ALIGNMENT_CENTER
-	actions.add_theme_constant_override("separation", 16)
+	actions.add_theme_constant_override("separation", 10)
 	root.add_child(actions)
 
 	continue_button = Button.new()
@@ -145,7 +145,7 @@ func _show_question() -> void:
 	question_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	question_label.custom_minimum_size = Vector2(0, 54)
 	question_label.text = q.get("prompt", "")
-	feedback_label.custom_minimum_size = Vector2(0, 22)
+	feedback_label.custom_minimum_size = Vector2(0, 10)
 	feedback_label.text = ""
 	answered_current = false
 	quiz_finished = false
@@ -200,11 +200,11 @@ func _finish_quiz() -> void:
 		GameState.save_progress()
 	quiz_finished = true
 	progress_label.text = "Challenge Complete"
-	top_spacer.custom_minimum_size = Vector2(0, 252)
+	top_spacer.custom_minimum_size = Vector2(0, 214)
 	question_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	question_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	question_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	question_label.custom_minimum_size = Vector2(0, 106)
+	question_label.custom_minimum_size = Vector2(0, 96)
 	if passed:
 		question_label.text = "Stamp earned! School Gate complete.\nScore: " + str(correct_total) + "/" + str(questions.size())
 		feedback_label.text = "Great job!"
@@ -218,7 +218,7 @@ func _finish_quiz() -> void:
 	options_box.visible = false
 	for b in option_buttons:
 		b.visible = false
-	feedback_label.custom_minimum_size = Vector2(0, 12)
+	feedback_label.custom_minimum_size = Vector2(0, 6)
 	bottom_spacer.custom_minimum_size = Vector2(0, 0)
 	continue_button.text = "Back to Zones"
 	continue_button.disabled = false

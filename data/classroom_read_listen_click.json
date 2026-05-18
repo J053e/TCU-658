@@ -1,0 +1,132 @@
+{
+  "zone_id": "classroom_survival",
+  "title": "Read, Listen and Click",
+  "questions": [
+    {
+      "id": "c01",
+      "instruction": "Sit down.",
+      "options": [
+        {
+          "label": "chair",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/chair.png"
+        },
+        {
+          "label": "door",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/door.png"
+        },
+        {
+          "label": "window",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/window.png"
+        }
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Good!",
+      "incorrect_feedback": "Try again."
+    },
+    {
+      "id": "c02",
+      "instruction": "Open your notebook.",
+      "options": [
+        {
+          "label": "notebook",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/notebook.png"
+        },
+        {
+          "label": "eraser",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/eraser.png"
+        },
+        {
+          "label": "desk",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/desk.png"
+        }
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Good job!",
+      "incorrect_feedback": "Read the instruction again."
+    },
+    {
+      "id": "c03",
+      "instruction": "Raise your hand.",
+      "options": [
+        {
+          "label": "student with hand up",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/hand_up.png"
+        },
+        {
+          "label": "student writing",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/writing.png"
+        },
+        {
+          "label": "student at door",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/at_door.png"
+        }
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Nice!",
+      "incorrect_feedback": "Look carefully."
+    },
+    {
+      "id": "c04",
+      "instruction": "Close the door.",
+      "options": [
+        {
+          "label": "door",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/door.png"
+        },
+        {
+          "label": "board",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/board.png"
+        },
+        {
+          "label": "book",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/book.png"
+        }
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Excellent!",
+      "incorrect_feedback": "Choose the correct object."
+    },
+    {
+      "id": "c05",
+      "instruction": "Stand up.",
+      "options": [
+        {
+          "label": "student standing",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/standing.png"
+        },
+        {
+          "label": "student sitting",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/sitting.png"
+        },
+        {
+          "label": "student sleeping",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/sleeping.png"
+        }
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Well done!",
+      "incorrect_feedback": "Try one more time."
+    },
+    {
+      "id": "c06",
+      "instruction": "Look at the board.",
+      "options": [
+        {
+          "label": "board",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/board.png"
+        },
+        {
+          "label": "window",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/window.png"
+        },
+        {
+          "label": "backpack",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/backpack.png"
+        }
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Correct!",
+      "incorrect_feedback": "Read again."
+    }
+  ]
+}

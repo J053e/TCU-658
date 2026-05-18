@@ -5,6 +5,9 @@ var zone_description: Label
 var minigame_title: Label
 var minigames_list: ItemList
 var start_button: Button
+var classroom_challenges_box: VBoxContainer
+var classroom_read_listen_button: Button
+var classroom_language_button: Button
 var top_spacer: Control
 var status_panel: PanelContainer
 var status_label: Label
@@ -81,6 +84,29 @@ func _build_ui() -> void:
 	start_button.pressed.connect(_on_StartButton_pressed)
 	root_vbox.add_child(start_button)
 
+	classroom_challenges_box = VBoxContainer.new()
+	classroom_challenges_box.visible = false
+	classroom_challenges_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	classroom_challenges_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	classroom_challenges_box.add_theme_constant_override("separation", 12)
+	root_vbox.add_child(classroom_challenges_box)
+
+	classroom_read_listen_button = Button.new()
+	classroom_read_listen_button.text = "Read, Listen and Click"
+	classroom_read_listen_button.custom_minimum_size = Vector2(520, 76)
+	classroom_read_listen_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	GameState.style_menu_button(classroom_read_listen_button, "green")
+	classroom_read_listen_button.pressed.connect(_on_ClassroomReadListen_pressed)
+	classroom_challenges_box.add_child(classroom_read_listen_button)
+
+	classroom_language_button = Button.new()
+	classroom_language_button.text = "Classroom Language"
+	classroom_language_button.custom_minimum_size = Vector2(520, 76)
+	classroom_language_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	GameState.style_menu_button(classroom_language_button, "purple")
+	classroom_language_button.pressed.connect(_on_ClassroomLanguage_pressed)
+	classroom_challenges_box.add_child(classroom_language_button)
+
 	status_panel = PanelContainer.new()
 	status_panel.add_theme_stylebox_override("panel", _status_panel_style())
 	root_vbox.add_child(status_panel)
@@ -127,6 +153,7 @@ func _render_zone() -> void:
 	zone_description.text = zone.get("description", "")
 
 	var is_school_gate := GameState.current_zone_id == "school_gate"
+	var is_classroom_survival := GameState.current_zone_id == "classroom_survival"
 	minigames_list.clear()
 
 	if is_school_gate:
@@ -134,11 +161,23 @@ func _render_zone() -> void:
 		minigame_title.visible = false
 		minigames_list.visible = false
 		start_button.visible = true
+		classroom_challenges_box.visible = false
 		complete_button.visible = false
 		status_label.text = "Press Start to begin the School Gate."
 		return
-	else:
-		top_spacer.custom_minimum_size = Vector2(0, 0)
+
+	if is_classroom_survival:
+		top_spacer.custom_minimum_size = Vector2(0, 38)
+		minigame_title.visible = true
+		minigame_title.text = "Challenges"
+		minigames_list.visible = false
+		start_button.visible = false
+		classroom_challenges_box.visible = true
+		complete_button.visible = false
+		status_label.text = "Choose a challenge to start."
+		return
+
+	top_spacer.custom_minimum_size = Vector2(0, 0)
 
 	for minigame_name in zone.get("minigames", []):
 		minigames_list.add_item(minigame_name + " (placeholder)")
@@ -147,6 +186,7 @@ func _render_zone() -> void:
 	minigame_title.text = "Minigames"
 	minigames_list.visible = true
 	start_button.visible = false
+	classroom_challenges_box.visible = false
 	complete_button.visible = true
 
 	if GameState.is_zone_completed(GameState.current_zone_id):
@@ -166,6 +206,12 @@ func _on_CompleteButton_pressed() -> void:
 
 func _on_StartButton_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/SchoolGateQuiz.tscn")
+
+func _on_ClassroomReadListen_pressed() -> void:
+	GameState.change_scene_with_transition("res://scenes/ClassroomReadListenClick.tscn")
+
+func _on_ClassroomLanguage_pressed() -> void:
+	GameState.change_scene_with_transition("res://scenes/ClassroomLanguagePlaceholder.tscn")
 
 func _on_BackButton_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/WorldMap.tscn", true)
