@@ -1,8 +1,12 @@
-extends Control
+﻿extends Control
 
 var zone_title: Label
 var zone_description: Label
+var minigame_title: Label
 var minigames_list: ItemList
+var start_button: Button
+var top_spacer: Control
+var status_panel: PanelContainer
 var status_label: Label
 var complete_button: Button
 
@@ -26,9 +30,13 @@ func _build_ui() -> void:
 	root_vbox.name = "VBox"
 	root_vbox.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	root_vbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	root_vbox.custom_minimum_size = Vector2(760, 500)
-	root_vbox.add_theme_constant_override("separation", 10)
+	root_vbox.custom_minimum_size = Vector2(840, 560)
+	root_vbox.add_theme_constant_override("separation", 12)
 	center.add_child(root_vbox)
+
+	top_spacer = Control.new()
+	top_spacer.custom_minimum_size = Vector2(0, 0)
+	root_vbox.add_child(top_spacer)
 
 	zone_title = Label.new()
 	zone_title.text = "Zone Title"
@@ -36,28 +44,59 @@ func _build_ui() -> void:
 	GameState.style_label(zone_title, 36, true)
 	root_vbox.add_child(zone_title)
 
+	var desc_panel := PanelContainer.new()
+	desc_panel.add_theme_stylebox_override("panel", _description_panel_style())
+	root_vbox.add_child(desc_panel)
+
+	var desc_margin := MarginContainer.new()
+	desc_margin.add_theme_constant_override("margin_left", 14)
+	desc_margin.add_theme_constant_override("margin_top", 10)
+	desc_margin.add_theme_constant_override("margin_right", 14)
+	desc_margin.add_theme_constant_override("margin_bottom", 10)
+	desc_panel.add_child(desc_margin)
+
 	zone_description = Label.new()
 	zone_description.text = "Zone description."
 	zone_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	zone_description.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	GameState.style_label(zone_description, 22, false)
-	root_vbox.add_child(zone_description)
+	desc_margin.add_child(zone_description)
 
-	var minigame_title := Label.new()
+	minigame_title = Label.new()
 	minigame_title.text = "Minigames"
 	minigame_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	GameState.style_label(minigame_title, 28, false)
 	root_vbox.add_child(minigame_title)
 
 	minigames_list = ItemList.new()
-	minigames_list.custom_minimum_size = Vector2(520, 220)
+	minigames_list.custom_minimum_size = Vector2(560, 220)
 	root_vbox.add_child(minigames_list)
+
+	start_button = Button.new()
+	start_button.text = "Start"
+	GameState.style_menu_button(start_button, "green")
+	start_button.custom_minimum_size = Vector2(360, 92)
+	start_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	start_button.visible = false
+	start_button.pressed.connect(_on_StartButton_pressed)
+	root_vbox.add_child(start_button)
+
+	status_panel = PanelContainer.new()
+	status_panel.add_theme_stylebox_override("panel", _status_panel_style())
+	root_vbox.add_child(status_panel)
+
+	var status_margin := MarginContainer.new()
+	status_margin.add_theme_constant_override("margin_left", 12)
+	status_margin.add_theme_constant_override("margin_top", 8)
+	status_margin.add_theme_constant_override("margin_right", 12)
+	status_margin.add_theme_constant_override("margin_bottom", 8)
+	status_panel.add_child(status_margin)
 
 	status_label = Label.new()
 	status_label.text = "Complete this zone to earn your stamp."
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	GameState.style_label(status_label, 21, false)
-	root_vbox.add_child(status_label)
+	status_margin.add_child(status_label)
 
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 12)
@@ -87,9 +126,28 @@ func _render_zone() -> void:
 	zone_title.text = zone.get("title", "Zone")
 	zone_description.text = zone.get("description", "")
 
+	var is_school_gate := GameState.current_zone_id == "school_gate"
 	minigames_list.clear()
+
+	if is_school_gate:
+		top_spacer.custom_minimum_size = Vector2(0, 78)
+		minigame_title.visible = false
+		minigames_list.visible = false
+		start_button.visible = true
+		complete_button.visible = false
+		status_label.text = "Press Start to begin the School Gate."
+		return
+	else:
+		top_spacer.custom_minimum_size = Vector2(0, 0)
+
 	for minigame_name in zone.get("minigames", []):
 		minigames_list.add_item(minigame_name + " (placeholder)")
+
+	minigame_title.visible = true
+	minigame_title.text = "Minigames"
+	minigames_list.visible = true
+	start_button.visible = false
+	complete_button.visible = true
 
 	if GameState.is_zone_completed(GameState.current_zone_id):
 		status_label.text = "Stamp already earned for this zone."
@@ -106,5 +164,30 @@ func _on_CompleteButton_pressed() -> void:
 	status_label.text = "Stamp earned! Zone complete."
 	complete_button.disabled = true
 
+func _on_StartButton_pressed() -> void:
+	GameState.change_scene_with_transition("res://scenes/SchoolGateQuiz.tscn")
+
 func _on_BackButton_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/WorldMap.tscn", true)
+
+func _description_panel_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.06, 0.10, 0.20, 0.80)
+	sb.border_color = Color(0.76, 0.88, 1.0, 0.9)
+	sb.set_border_width_all(2)
+	sb.corner_radius_top_left = 14
+	sb.corner_radius_top_right = 14
+	sb.corner_radius_bottom_right = 14
+	sb.corner_radius_bottom_left = 14
+	return sb
+
+func _status_panel_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.04, 0.08, 0.18, 0.82)
+	sb.border_color = Color(0.72, 0.86, 1.0, 0.9)
+	sb.set_border_width_all(2)
+	sb.corner_radius_top_left = 12
+	sb.corner_radius_top_right = 12
+	sb.corner_radius_bottom_right = 12
+	sb.corner_radius_bottom_left = 12
+	return sb

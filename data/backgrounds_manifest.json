@@ -3,8 +3,7 @@
     "school_gate": {
       "zone_screen": "res://assets/zones/zone_01_school_gate/backgrounds/zone_screen.png",
       "minigames": {
-        "choose_greeting": "res://assets/zones/zone_01_school_gate/backgrounds/minigames/choose_greeting.png",
-        "choose_best_response": "res://assets/zones/zone_01_school_gate/backgrounds/minigames/choose_best_response.png"
+        "school_gate_challenge": "res://assets/zones/zone_01_school_gate/backgrounds/minigames/school_gate_challenge.png"
       }
     },
     "classroom_survival": {

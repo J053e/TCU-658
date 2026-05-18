@@ -8,8 +8,7 @@
       "title": "School Gate",
       "description": "Choose the best greeting or farewell for each situation.",
       "minigames": [
-        "Choose the Greeting",
-        "Choose the Best Response"
+        "School Gate Challenge"
       ]
     },
     {
@@ -52,4 +51,3 @@
     }
   ]
 }
-
