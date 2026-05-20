@@ -17,6 +17,7 @@ var profile := {
 	"country": "Costa Rica",
 	"town": ""
 }
+var challenge_results: Dictionary = {}
 var ui_click_player: AudioStreamPlayer
 var pretty_font: SystemFont
 var background_manifest: Dictionary = {}
@@ -110,13 +111,15 @@ func all_zones_completed() -> bool:
 
 func reset_progress() -> void:
 	_initialize_stamps()
+	challenge_results.clear()
 	current_zone_id = ""
 	save_progress()
 
 func save_progress() -> void:
 	var payload := {
 		"stamps": stamps,
-		"profile": profile
+		"profile": profile,
+		"challenge_results": challenge_results
 	}
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -145,6 +148,44 @@ func load_progress() -> void:
 		for key in payload_dict["profile"].keys():
 			if profile.has(key):
 				profile[key] = payload_dict["profile"][key]
+	if payload_dict.has("challenge_results") and typeof(payload_dict["challenge_results"]) == TYPE_DICTIONARY:
+		challenge_results = payload_dict["challenge_results"].duplicate(true)
+
+func has_challenge_result(challenge_id: String) -> bool:
+	var result := get_challenge_result(challenge_id)
+	return not result.is_empty() and int(result.get("attempts", 0)) > 0
+
+func get_challenge_result(challenge_id: String) -> Dictionary:
+	if challenge_results.has(challenge_id) and typeof(challenge_results[challenge_id]) == TYPE_DICTIONARY:
+		return challenge_results[challenge_id]
+	return {}
+
+func record_challenge_result(challenge_id: String, correct_answers: int, total_questions: int, pass_ratio: float) -> Dictionary:
+	var safe_total := maxi(total_questions, 1)
+	var safe_correct := clampi(correct_answers, 0, safe_total)
+	var safe_ratio := clampf(pass_ratio, 0.0, 1.0)
+	var previous := get_challenge_result(challenge_id)
+
+	var previous_best := int(previous.get("best_correct", -1))
+	var best_correct := safe_correct if safe_correct > previous_best else previous_best
+	if previous_best < 0:
+		best_correct = safe_correct
+
+	var attempts := int(previous.get("attempts", 0)) + 1
+	var passed_now := safe_correct >= int(ceil(float(safe_total) * safe_ratio))
+	var passed := bool(previous.get("passed", false)) or passed_now
+
+	var result := {
+		"attempts": attempts,
+		"best_correct": best_correct,
+		"total_questions": safe_total,
+		"pass_ratio": safe_ratio,
+		"passed": passed,
+		"last_correct": safe_correct
+	}
+	challenge_results[challenge_id] = result
+	save_progress()
+	return result
 
 func decorate_screen(root: Control, background_path: String = "") -> void:
 	_add_background(root, background_path)

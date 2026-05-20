@@ -2,6 +2,7 @@
 
 const QUIZ_DATA_PATH := "res://data/school_gate_quiz.json"
 const PASS_RATIO := 0.70
+const CHALLENGE_ID := "school_gate_challenge"
 
 var progress_label: Label
 var question_label: Label
@@ -14,6 +15,8 @@ var bottom_spacer: Control
 var option_buttons := []
 var continue_button: Button
 var back_button: Button
+var repeat_button: Button
+var result_status_label: Label
 
 var quiz_data: Dictionary = {}
 var questions: Array = []
@@ -25,7 +28,10 @@ var quiz_finished: bool = false
 func _ready() -> void:
 	_build_ui()
 	_load_quiz_data()
-	_show_question()
+	if GameState.has_challenge_result(CHALLENGE_ID):
+		_show_saved_summary()
+	else:
+		_start_new_attempt()
 	GameState.play_enter_transition(self)
 
 func _build_ui() -> void:
@@ -119,6 +125,19 @@ func _build_ui() -> void:
 	back_button.pressed.connect(_on_back_pressed)
 	actions.add_child(back_button)
 
+	repeat_button = Button.new()
+	repeat_button.text = "Repeat"
+	GameState.style_menu_button(repeat_button, "purple")
+	repeat_button.visible = false
+	repeat_button.pressed.connect(_on_repeat_pressed)
+	actions.add_child(repeat_button)
+
+	result_status_label = Label.new()
+	result_status_label.visible = false
+	result_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	GameState.style_label(result_status_label, 18, true)
+	actions.add_child(result_status_label)
+
 func _load_quiz_data() -> void:
 	if not FileAccess.file_exists(QUIZ_DATA_PATH):
 		return
@@ -151,6 +170,8 @@ func _show_question() -> void:
 	quiz_finished = false
 	continue_button.text = "Continue"
 	continue_button.disabled = true
+	repeat_button.visible = false
+	result_status_label.visible = false
 	situation_image.visible = true
 	situation_image.custom_minimum_size = Vector2(760, 210)
 	options_top_spacer.visible = true
@@ -193,11 +214,26 @@ func _on_option_pressed(index: int) -> void:
 	continue_button.disabled = false
 
 func _finish_quiz() -> void:
-	var pass_required: int = int(ceil(float(questions.size()) * PASS_RATIO))
-	var passed: bool = correct_total >= pass_required
+	var result := GameState.record_challenge_result(CHALLENGE_ID, correct_total, questions.size(), PASS_RATIO)
+	var passed: bool = bool(result.get("passed", false))
 	if passed:
 		GameState.mark_zone_complete("school_gate")
 		GameState.save_progress()
+	_show_summary(result)
+
+func _show_saved_summary() -> void:
+	var result := GameState.get_challenge_result(CHALLENGE_ID)
+	_show_summary(result)
+
+func _show_summary(result: Dictionary) -> void:
+	var total := maxi(int(result.get("total_questions", questions.size())), 1)
+	var best_correct := clampi(int(result.get("best_correct", 0)), 0, total)
+	var passed := bool(result.get("passed", false))
+	var attempts := int(result.get("attempts", 0))
+	if passed and not GameState.is_zone_completed("school_gate"):
+		GameState.mark_zone_complete("school_gate")
+		GameState.save_progress()
+
 	quiz_finished = true
 	progress_label.text = "Challenge Complete"
 	top_spacer.custom_minimum_size = Vector2(0, 214)
@@ -206,11 +242,13 @@ func _finish_quiz() -> void:
 	question_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	question_label.custom_minimum_size = Vector2(0, 96)
 	if passed:
-		question_label.text = "Stamp earned! School Gate complete.\nScore: " + str(correct_total) + "/" + str(questions.size())
+		question_label.text = "Stamp earned! School Gate complete.\nBest score: " + str(best_correct) + "/" + str(total)
 		feedback_label.text = "Great job!"
 	else:
-		question_label.text = "You need at least 70% to earn the badge.\nScore: " + str(correct_total) + "/" + str(questions.size())
+		question_label.text = "You need at least 70% to earn the badge.\nBest score: " + str(best_correct) + "/" + str(total)
 		feedback_label.text = "Try again to unlock the School Gate badge."
+	if attempts > 1:
+		feedback_label.text += " Attempts: " + str(attempts)
 	situation_image.texture = null
 	situation_image.visible = false
 	situation_image.custom_minimum_size = Vector2(0, 0)
@@ -222,6 +260,24 @@ func _finish_quiz() -> void:
 	bottom_spacer.custom_minimum_size = Vector2(0, 0)
 	continue_button.text = "Back to Zones"
 	continue_button.disabled = false
+	repeat_button.visible = true
+	result_status_label.visible = true
+	if passed:
+		result_status_label.text = "Status: Approved"
+		result_status_label.add_theme_color_override("font_color", Color(0.76, 1.0, 0.74))
+	else:
+		result_status_label.text = "Status: Failed"
+		result_status_label.add_theme_color_override("font_color", Color(1.0, 0.72, 0.72))
+
+func _start_new_attempt() -> void:
+	current_index = 0
+	correct_total = 0
+	answered_current = false
+	quiz_finished = false
+	_show_question()
+
+func _on_repeat_pressed() -> void:
+	_start_new_attempt()
 
 func _on_continue_pressed() -> void:
 	if quiz_finished:

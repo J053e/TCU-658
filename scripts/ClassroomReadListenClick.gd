@@ -1,14 +1,20 @@
 extends Control
 
 const DATA_PATH := "res://data/classroom_read_listen_click.json"
+const PASS_RATIO := 0.70
+const CHALLENGE_ID := "classroom_read_listen_click"
 
 var instruction_label: Label
 var progress_label: Label
 var feedback_label: Label
 var options_row: HBoxContainer
+var top_spacer: Control
+var summary_spacer: Control
 var option_buttons := []
 var continue_button: Button
 var back_button: Button
+var repeat_button: Button
+var result_status_label: Label
 
 var quiz_data: Dictionary = {}
 var questions: Array = []
@@ -21,7 +27,10 @@ func _ready() -> void:
 	GameState.decorate_screen(self, GameState.get_minigame_background("classroom_survival", "read_listen_click"))
 	_build_ui()
 	_load_data()
-	_show_question()
+	if GameState.has_challenge_result(CHALLENGE_ID):
+		_show_saved_summary()
+	else:
+		_start_new_attempt()
 	GameState.play_enter_transition(self)
 
 func _build_ui() -> void:
@@ -50,6 +59,10 @@ func _build_ui() -> void:
 	GameState.style_label(title, 36, true)
 	root.add_child(title)
 
+	top_spacer = Control.new()
+	top_spacer.custom_minimum_size = Vector2(0, 12)
+	root.add_child(top_spacer)
+
 	progress_label = Label.new()
 	progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	GameState.style_label(progress_label, 22, false)
@@ -71,6 +84,11 @@ func _build_ui() -> void:
 		var option_button := _create_option_button(i)
 		options_row.add_child(option_button)
 		option_buttons.append(option_button)
+
+	summary_spacer = Control.new()
+	summary_spacer.visible = false
+	summary_spacer.custom_minimum_size = Vector2(0, 0)
+	root.add_child(summary_spacer)
 
 	feedback_label = Label.new()
 	feedback_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -96,6 +114,19 @@ func _build_ui() -> void:
 	GameState.style_menu_button(back_button, "orange")
 	back_button.pressed.connect(_on_back_pressed)
 	actions.add_child(back_button)
+
+	repeat_button = Button.new()
+	repeat_button.text = "Repeat"
+	GameState.style_menu_button(repeat_button, "purple")
+	repeat_button.visible = false
+	repeat_button.pressed.connect(_on_repeat_pressed)
+	actions.add_child(repeat_button)
+
+	result_status_label = Label.new()
+	result_status_label.visible = false
+	result_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	GameState.style_label(result_status_label, 18, true)
+	actions.add_child(result_status_label)
 
 func _create_option_button(index: int) -> Button:
 	var button := Button.new()
@@ -163,6 +194,7 @@ func _show_question() -> void:
 		return
 
 	var q: Dictionary = questions[current_index]
+	top_spacer.custom_minimum_size = Vector2(0, 12)
 	progress_label.text = "Instruction " + str(current_index + 1) + "/" + str(questions.size())
 	instruction_label.text = q.get("instruction", "")
 	feedback_label.text = ""
@@ -171,6 +203,10 @@ func _show_question() -> void:
 	continue_button.disabled = true
 	continue_button.text = "Continue"
 	options_row.visible = true
+	summary_spacer.visible = false
+	summary_spacer.custom_minimum_size = Vector2(0, 0)
+	repeat_button.visible = false
+	result_status_label.visible = false
 
 	var options: Array = q.get("options", [])
 	for i in range(option_buttons.size()):
@@ -214,24 +250,58 @@ func _on_continue_pressed() -> void:
 	_show_question()
 
 func _finish() -> void:
+	var result := GameState.record_challenge_result(CHALLENGE_ID, correct_total, questions.size(), PASS_RATIO)
+	_show_summary(result)
+
+func _show_saved_summary() -> void:
+	var result := GameState.get_challenge_result(CHALLENGE_ID)
+	_show_summary(result)
+
+func _show_summary(result: Dictionary) -> void:
 	finished = true
-	var required := int(ceil(float(questions.size()) * 0.7))
-	var passed := correct_total >= required
+	var total := maxi(int(result.get("total_questions", questions.size())), 1)
+	var best_correct := clampi(int(result.get("best_correct", 0)), 0, total)
+	var passed := bool(result.get("passed", false))
+	var attempts := int(result.get("attempts", 0))
 
 	progress_label.text = "Challenge Complete"
+	top_spacer.custom_minimum_size = Vector2(0, 72)
+	instruction_label.custom_minimum_size = Vector2(0, 110)
 	if passed:
-		instruction_label.text = "Great! You passed Read, Listen and Click.\nScore: " + str(correct_total) + "/" + str(questions.size())
+		instruction_label.text = "Great! You passed Read, Listen and Click.\nBest score: " + str(best_correct) + "/" + str(total)
 		feedback_label.text = "You can understand simple classroom instructions."
 	else:
-		instruction_label.text = "Keep practicing. You need at least 70%.\nScore: " + str(correct_total) + "/" + str(questions.size())
+		instruction_label.text = "Keep practicing. You need at least 70%.\nBest score: " + str(best_correct) + "/" + str(total)
 		feedback_label.text = "Read carefully and try again."
+	if attempts > 1:
+		feedback_label.text += " Attempts: " + str(attempts)
 
 	options_row.visible = false
+	summary_spacer.visible = true
+	summary_spacer.custom_minimum_size = Vector2(0, 70)
 	continue_button.text = "Back to Zone"
 	continue_button.disabled = false
+	repeat_button.visible = true
+	result_status_label.visible = true
+	if passed:
+		result_status_label.text = "Status: Approved"
+		result_status_label.add_theme_color_override("font_color", Color(0.76, 1.0, 0.74))
+	else:
+		result_status_label.text = "Status: Failed"
+		result_status_label.add_theme_color_override("font_color", Color(1.0, 0.72, 0.72))
 
 func _on_back_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/ZoneScene.tscn", true)
+
+func _start_new_attempt() -> void:
+	current_index = 0
+	correct_total = 0
+	answered_current = false
+	finished = false
+	_show_question()
+
+func _on_repeat_pressed() -> void:
+	_start_new_attempt()
 
 func _load_fitted_icon(path: String, max_size: Vector2i) -> Texture2D:
 	if path == "" or not ResourceLoader.exists(path):
