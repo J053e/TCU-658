@@ -1,8 +1,8 @@
-﻿extends Control
+extends Control
 
-const QUIZ_DATA_PATH := "res://data/school_gate_quiz.json"
+const QUIZ_DATA_PATH := "res://data/classroom_language_quiz.json"
 const PASS_RATIO := 0.70
-const CHALLENGE_ID := "school_gate_challenge"
+const CHALLENGE_ID := "classroom_language"
 
 var progress_label: Label
 var question_label: Label
@@ -35,25 +35,25 @@ func _ready() -> void:
 	GameState.play_enter_transition(self)
 
 func _build_ui() -> void:
-	GameState.decorate_screen(self, GameState.get_minigame_background("school_gate", "school_gate_challenge"))
+	GameState.decorate_screen(self, GameState.get_minigame_background("classroom_survival", "classroom_language"))
 
 	var screen_margin := MarginContainer.new()
 	screen_margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	screen_margin.add_theme_constant_override("margin_left", 64)
-	screen_margin.add_theme_constant_override("margin_top", 18)
+	screen_margin.add_theme_constant_override("margin_top", 22)
 	screen_margin.add_theme_constant_override("margin_right", 64)
 	screen_margin.add_theme_constant_override("margin_bottom", 40)
 	add_child(screen_margin)
 
 	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 6)
+	root.add_theme_constant_override("separation", 8)
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.custom_minimum_size = Vector2(1060, 0)
 	screen_margin.add_child(root)
 
 	top_spacer = Control.new()
-	top_spacer.custom_minimum_size = Vector2(0, 44)
+	top_spacer.custom_minimum_size = Vector2(0, 34)
 	root.add_child(top_spacer)
 
 	progress_label = Label.new()
@@ -66,19 +66,19 @@ func _build_ui() -> void:
 	question_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	question_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	question_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	question_label.custom_minimum_size = Vector2(0, 54)
-	GameState.style_label(question_label, 22, false)
+	question_label.custom_minimum_size = Vector2(0, 88)
+	GameState.style_label(question_label, 24, false)
 	root.add_child(question_label)
 
 	situation_image = TextureRect.new()
-	situation_image.custom_minimum_size = Vector2(760, 210)
+	situation_image.custom_minimum_size = Vector2(760, 220)
 	situation_image.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	situation_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	situation_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_child(situation_image)
 
 	options_top_spacer = Control.new()
-	options_top_spacer.custom_minimum_size = Vector2(0, 10)
+	options_top_spacer.custom_minimum_size = Vector2(0, 6)
 	root.add_child(options_top_spacer)
 
 	options_box = VBoxContainer.new()
@@ -87,7 +87,7 @@ func _build_ui() -> void:
 	for i in range(3):
 		var button := Button.new()
 		GameState.style_menu_button(button, ["blue", "green", "purple"][i])
-		button.custom_minimum_size = Vector2(0, 42)
+		button.custom_minimum_size = Vector2(0, 44)
 		button.pressed.connect(_on_option_pressed.bind(i))
 		options_box.add_child(button)
 		option_buttons.append(button)
@@ -95,9 +95,8 @@ func _build_ui() -> void:
 	feedback_label = Label.new()
 	feedback_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	feedback_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	feedback_label.custom_minimum_size = Vector2(0, 10)
-	feedback_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	feedback_label.clip_text = true
+	feedback_label.custom_minimum_size = Vector2(0, 14)
+	feedback_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	GameState.style_label(feedback_label, 20, true)
 	root.add_child(feedback_label)
 
@@ -160,11 +159,10 @@ func _show_question() -> void:
 
 	var q: Dictionary = questions[current_index]
 	progress_label.text = "Question " + str(current_index + 1) + "/" + str(questions.size())
-	top_spacer.custom_minimum_size = Vector2(0, 44)
-	question_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	question_label.custom_minimum_size = Vector2(0, 54)
+	top_spacer.custom_minimum_size = Vector2(0, 34)
+	question_label.custom_minimum_size = Vector2(0, 88)
 	question_label.text = q.get("prompt", "")
-	feedback_label.custom_minimum_size = Vector2(0, 10)
+	feedback_label.custom_minimum_size = Vector2(0, 14)
 	feedback_label.text = ""
 	answered_current = false
 	quiz_finished = false
@@ -173,10 +171,9 @@ func _show_question() -> void:
 	repeat_button.visible = false
 	result_status_label.visible = false
 	situation_image.visible = true
-	situation_image.custom_minimum_size = Vector2(760, 210)
+	situation_image.custom_minimum_size = Vector2(760, 220)
 	options_top_spacer.visible = true
 	options_box.visible = true
-	bottom_spacer.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	bottom_spacer.custom_minimum_size = Vector2(0, 0)
 
 	var img_path: String = String(q.get("image", ""))
@@ -215,13 +212,14 @@ func _on_option_pressed(index: int) -> void:
 
 func _finish_quiz() -> void:
 	var result := GameState.record_challenge_result(CHALLENGE_ID, correct_total, questions.size(), PASS_RATIO)
-	var passed: bool = bool(result.get("passed", false))
-	if passed:
-		GameState.unlock_zone_badge("school_gate")
+	if bool(result.get("passed", false)):
+		GameState.update_zone_badge_from_requirements("classroom_survival")
 	_show_summary(result)
 
 func _show_saved_summary() -> void:
 	var result := GameState.get_challenge_result(CHALLENGE_ID)
+	if bool(result.get("passed", false)):
+		GameState.update_zone_badge_from_requirements("classroom_survival")
 	_show_summary(result)
 
 func _show_summary(result: Dictionary) -> void:
@@ -229,24 +227,20 @@ func _show_summary(result: Dictionary) -> void:
 	var best_correct := clampi(int(result.get("best_correct", 0)), 0, total)
 	var passed := bool(result.get("passed", false))
 	var attempts := int(result.get("attempts", 0))
-	if passed and not GameState.is_zone_completed("school_gate"):
-		GameState.unlock_zone_badge("school_gate")
 
 	quiz_finished = true
 	progress_label.text = "Challenge Complete"
-	top_spacer.custom_minimum_size = Vector2(0, 214)
-	question_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	question_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	question_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	top_spacer.custom_minimum_size = Vector2(0, 110)
 	question_label.custom_minimum_size = Vector2(0, 96)
 	if passed:
-		question_label.text = "Stamp earned! School Gate complete.\nBest score: " + str(best_correct) + "/" + str(total)
-		feedback_label.text = "Great job!"
+		question_label.text = "Great! You passed Classroom Language.\nBest score: " + str(best_correct) + "/" + str(total)
+		feedback_label.text = "Your classroom expressions are improving."
 	else:
-		question_label.text = "You need at least 70% to earn the badge.\nBest score: " + str(best_correct) + "/" + str(total)
-		feedback_label.text = "Try again to unlock the School Gate badge."
+		question_label.text = "Keep practicing. You need at least 70%.\nBest score: " + str(best_correct) + "/" + str(total)
+		feedback_label.text = "Read each classroom situation carefully."
 	if attempts > 1:
 		feedback_label.text += " Attempts: " + str(attempts)
+
 	situation_image.texture = null
 	situation_image.visible = false
 	situation_image.custom_minimum_size = Vector2(0, 0)
@@ -254,9 +248,9 @@ func _show_summary(result: Dictionary) -> void:
 	options_box.visible = false
 	for b in option_buttons:
 		b.visible = false
-	feedback_label.custom_minimum_size = Vector2(0, 6)
-	bottom_spacer.custom_minimum_size = Vector2(0, 0)
-	continue_button.text = "Back to Zones"
+	feedback_label.custom_minimum_size = Vector2(0, 18)
+	bottom_spacer.custom_minimum_size = Vector2(0, 12)
+	continue_button.text = "Back to Zone"
 	continue_button.disabled = false
 	repeat_button.visible = true
 	result_status_label.visible = true
@@ -279,7 +273,7 @@ func _on_repeat_pressed() -> void:
 
 func _on_continue_pressed() -> void:
 	if quiz_finished:
-		_exit_with_badge_popup("res://scenes/WorldMap.tscn", true)
+		_exit_with_badge_popup("res://scenes/ZoneScene.tscn", true)
 		return
 	if not answered_current:
 		return
@@ -295,7 +289,7 @@ func _on_back_pressed() -> void:
 func _exit_with_badge_popup(scene_path: String, is_back: bool) -> void:
 	GameState.show_badge_popup_or_continue(
 		self,
-		"school_gate",
+		"classroom_survival",
 		Callable(self, "_change_scene_after_popup").bind(scene_path, is_back)
 	)
 

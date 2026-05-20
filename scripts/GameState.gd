@@ -5,6 +5,16 @@ const CONTENT_PATH := "res://data/game_content.json"
 const BACKGROUND_MANIFEST_PATH := "res://data/backgrounds_manifest.json"
 const GLOBAL_ICONS_DIR := "res://assets/branding/global_icons"
 const CLICK_SFX_PATH := "res://assets/audio/sfx/ui_click.wav"
+const ZONE_BADGE_PATHS := {
+	"school_gate": "res://assets/ui/badges/medal_01.png",
+	"classroom_survival": "res://assets/ui/badges/medal_02.png",
+	"meet_classmates": "res://assets/ui/badges/medal_03.png",
+	"my_school_card": "res://assets/ui/badges/medal_04.png",
+	"final_passport": "res://assets/ui/badges/medal_05.png"
+}
+const ZONE_CHALLENGE_REQUIREMENTS := {
+	"classroom_survival": ["classroom_read_listen_click", "classroom_language"]
+}
 
 var content := {}
 var current_zone_id := ""
@@ -18,6 +28,7 @@ var profile := {
 	"town": ""
 }
 var challenge_results: Dictionary = {}
+var pending_badge_popups: Dictionary = {}
 var ui_click_player: AudioStreamPlayer
 var pretty_font: SystemFont
 var background_manifest: Dictionary = {}
@@ -112,6 +123,7 @@ func all_zones_completed() -> bool:
 func reset_progress() -> void:
 	_initialize_stamps()
 	challenge_results.clear()
+	pending_badge_popups.clear()
 	current_zone_id = ""
 	save_progress()
 
@@ -119,7 +131,8 @@ func save_progress() -> void:
 	var payload := {
 		"stamps": stamps,
 		"profile": profile,
-		"challenge_results": challenge_results
+		"challenge_results": challenge_results,
+		"pending_badge_popups": pending_badge_popups
 	}
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -150,6 +163,8 @@ func load_progress() -> void:
 				profile[key] = payload_dict["profile"][key]
 	if payload_dict.has("challenge_results") and typeof(payload_dict["challenge_results"]) == TYPE_DICTIONARY:
 		challenge_results = payload_dict["challenge_results"].duplicate(true)
+	if payload_dict.has("pending_badge_popups") and typeof(payload_dict["pending_badge_popups"]) == TYPE_DICTIONARY:
+		pending_badge_popups = payload_dict["pending_badge_popups"].duplicate(true)
 
 func has_challenge_result(challenge_id: String) -> bool:
 	var result := get_challenge_result(challenge_id)
@@ -186,6 +201,127 @@ func record_challenge_result(challenge_id: String, correct_answers: int, total_q
 	challenge_results[challenge_id] = result
 	save_progress()
 	return result
+
+func unlock_zone_badge(zone_id: String) -> bool:
+	if zone_id == "" or not stamps.has(zone_id):
+		return false
+	if is_zone_completed(zone_id):
+		return false
+	mark_zone_complete(zone_id)
+	pending_badge_popups[zone_id] = true
+	save_progress()
+	return true
+
+func update_zone_badge_from_requirements(zone_id: String) -> bool:
+	if not ZONE_CHALLENGE_REQUIREMENTS.has(zone_id):
+		return false
+	if is_zone_completed(zone_id):
+		return false
+	var requirements: Array = ZONE_CHALLENGE_REQUIREMENTS[zone_id]
+	for challenge in requirements:
+		var challenge_id := String(challenge)
+		var result := get_challenge_result(challenge_id)
+		if result.is_empty() or not bool(result.get("passed", false)):
+			return false
+	return unlock_zone_badge(zone_id)
+
+func has_pending_badge_popup(zone_id: String) -> bool:
+	return bool(pending_badge_popups.get(zone_id, false))
+
+func consume_badge_popup(zone_id: String) -> void:
+	if pending_badge_popups.has(zone_id):
+		pending_badge_popups.erase(zone_id)
+		save_progress()
+
+func get_badge_path(zone_id: String) -> String:
+	return String(ZONE_BADGE_PATHS.get(zone_id, ""))
+
+func show_badge_popup_or_continue(root: Control, zone_id: String, on_continue: Callable) -> void:
+	if not has_pending_badge_popup(zone_id):
+		if on_continue.is_valid():
+			on_continue.call()
+		return
+	if root == null or not is_instance_valid(root):
+		return
+
+	var layer := CanvasLayer.new()
+	layer.layer = 300
+	root.add_child(layer)
+
+	var dim := ColorRect.new()
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.color = Color(0, 0, 0, 0.55)
+	layer.add_child(dim)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(center)
+
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(560, 400)
+	panel.add_theme_stylebox_override("panel", _medal_popup_style())
+	center.add_child(panel)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_bottom", 20)
+	panel.add_child(margin)
+
+	var content := VBoxContainer.new()
+	content.alignment = BoxContainer.ALIGNMENT_CENTER
+	content.add_theme_constant_override("separation", 12)
+	margin.add_child(content)
+
+	var title := Label.new()
+	title.text = "Congratulations!"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	style_label(title, 38, true)
+	content.add_child(title)
+
+	var subtitle := Label.new()
+	subtitle.text = "You earned a new medal."
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	style_label(subtitle, 24, false)
+	content.add_child(subtitle)
+
+	var badge := TextureRect.new()
+	badge.custom_minimum_size = Vector2(156, 156)
+	badge.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	badge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var badge_path := get_badge_path(zone_id)
+	if badge_path != "" and ResourceLoader.exists(badge_path):
+		badge.texture = load(badge_path)
+	content.add_child(badge)
+
+	var ok_button := Button.new()
+	ok_button.text = "Great!"
+	ok_button.custom_minimum_size = Vector2(220, 68)
+	style_menu_button(ok_button, "green")
+	content.add_child(ok_button)
+
+	ok_button.pressed.connect(func() -> void:
+		consume_badge_popup(zone_id)
+		if is_instance_valid(layer):
+			layer.queue_free()
+		if on_continue.is_valid():
+			on_continue.call()
+	)
+
+func _medal_popup_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.07, 0.11, 0.25, 0.97)
+	sb.border_color = Color(0.96, 0.91, 0.43, 1.0)
+	sb.set_border_width_all(4)
+	sb.corner_radius_top_left = 20
+	sb.corner_radius_top_right = 20
+	sb.corner_radius_bottom_right = 20
+	sb.corner_radius_bottom_left = 20
+	sb.shadow_color = Color(0, 0, 0, 0.35)
+	sb.shadow_size = 8
+	sb.shadow_offset = Vector2(0, 2)
+	return sb
 
 func decorate_screen(root: Control, background_path: String = "") -> void:
 	_add_background(root, background_path)

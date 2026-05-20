@@ -211,7 +211,7 @@ func _on_ClassroomReadListen_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/ClassroomReadListenClick.tscn")
 
 func _on_ClassroomLanguage_pressed() -> void:
-	GameState.change_scene_with_transition("res://scenes/ClassroomLanguagePlaceholder.tscn")
+	GameState.change_scene_with_transition("res://scenes/ClassroomLanguageQuiz.tscn")
 
 func _on_BackButton_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/WorldMap.tscn", true)

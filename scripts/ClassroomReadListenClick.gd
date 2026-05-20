@@ -242,7 +242,7 @@ func _on_option_pressed(index: int) -> void:
 
 func _on_continue_pressed() -> void:
 	if finished:
-		GameState.change_scene_with_transition("res://scenes/ZoneScene.tscn", true)
+		_exit_with_badge_popup("res://scenes/ZoneScene.tscn", true)
 		return
 	if not answered_current:
 		return
@@ -251,10 +251,14 @@ func _on_continue_pressed() -> void:
 
 func _finish() -> void:
 	var result := GameState.record_challenge_result(CHALLENGE_ID, correct_total, questions.size(), PASS_RATIO)
+	if bool(result.get("passed", false)):
+		GameState.update_zone_badge_from_requirements("classroom_survival")
 	_show_summary(result)
 
 func _show_saved_summary() -> void:
 	var result := GameState.get_challenge_result(CHALLENGE_ID)
+	if bool(result.get("passed", false)):
+		GameState.update_zone_badge_from_requirements("classroom_survival")
 	_show_summary(result)
 
 func _show_summary(result: Dictionary) -> void:
@@ -291,6 +295,9 @@ func _show_summary(result: Dictionary) -> void:
 		result_status_label.add_theme_color_override("font_color", Color(1.0, 0.72, 0.72))
 
 func _on_back_pressed() -> void:
+	if finished:
+		_exit_with_badge_popup("res://scenes/ZoneScene.tscn", true)
+		return
 	GameState.change_scene_with_transition("res://scenes/ZoneScene.tscn", true)
 
 func _start_new_attempt() -> void:
@@ -302,6 +309,16 @@ func _start_new_attempt() -> void:
 
 func _on_repeat_pressed() -> void:
 	_start_new_attempt()
+
+func _exit_with_badge_popup(scene_path: String, is_back: bool) -> void:
+	GameState.show_badge_popup_or_continue(
+		self,
+		"classroom_survival",
+		Callable(self, "_change_scene_after_popup").bind(scene_path, is_back)
+	)
+
+func _change_scene_after_popup(scene_path: String, is_back: bool) -> void:
+	GameState.change_scene_with_transition(scene_path, is_back)
 
 func _load_fitted_icon(path: String, max_size: Vector2i) -> Texture2D:
 	if path == "" or not ResourceLoader.exists(path):
