@@ -13,7 +13,8 @@ const ZONE_BADGE_PATHS := {
 	"final_passport": "res://assets/ui/badges/medal_05.png"
 }
 const ZONE_CHALLENGE_REQUIREMENTS := {
-	"classroom_survival": ["classroom_read_listen_click", "classroom_language"]
+	"classroom_survival": ["classroom_read_listen_click", "classroom_language"],
+	"meet_classmates": ["meet_order_dialogue"]
 }
 
 var content := {}

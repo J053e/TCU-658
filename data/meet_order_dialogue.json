@@ -1,0 +1,46 @@
+{
+  "zone_id": "meet_classmates",
+  "title": "Order the Dialogue",
+  "dialogues": [
+    {
+      "id": "dialogue_a",
+      "label": "Dialogue A",
+      "blocks": [
+        "Hi!",
+        "What's your name?",
+        "My name is Ana.",
+        "Nice to meet you.",
+        "Bye!"
+      ],
+      "correct_feedback": "Perfect order!",
+      "incorrect_feedback": "Put the conversation in a logical order."
+    },
+    {
+      "id": "dialogue_b",
+      "label": "Dialogue B",
+      "blocks": [
+        "Hello!",
+        "Where are you from?",
+        "I am from Costa Rica. And you?",
+        "That's nice. I'm from Colombia.",
+        "See you later!"
+      ],
+      "correct_feedback": "Great!",
+      "incorrect_feedback": "Try again."
+    },
+    {
+      "id": "dialogue_c",
+      "label": "Dialogue C",
+      "blocks": [
+        "Staff: Hello! Welcome to the youth club.",
+        "Student: Hi! I'd like to join.",
+        "Staff: Great. How old are you?",
+        "Student: I am twelve years old.",
+        "Staff: Perfect. You are in the right group.",
+        "Student: Cool! Thanks."
+      ],
+      "correct_feedback": "Excellent!",
+      "incorrect_feedback": "Check the order again."
+    }
+  ]
+}
