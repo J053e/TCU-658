@@ -8,6 +8,10 @@ var start_button: Button
 var classroom_challenges_box: VBoxContainer
 var classroom_read_listen_button: Button
 var classroom_language_button: Button
+var meet_classmates_challenges_box: VBoxContainer
+var meet_dialogue_button: Button
+var meet_question_button: Button
+var meet_politeness_button: Button
 var top_spacer: Control
 var status_panel: PanelContainer
 var status_label: Label
@@ -107,6 +111,37 @@ func _build_ui() -> void:
 	classroom_language_button.pressed.connect(_on_ClassroomLanguage_pressed)
 	classroom_challenges_box.add_child(classroom_language_button)
 
+	meet_classmates_challenges_box = VBoxContainer.new()
+	meet_classmates_challenges_box.visible = false
+	meet_classmates_challenges_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	meet_classmates_challenges_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	meet_classmates_challenges_box.add_theme_constant_override("separation", 12)
+	root_vbox.add_child(meet_classmates_challenges_box)
+
+	meet_dialogue_button = Button.new()
+	meet_dialogue_button.text = "Order the Dialogue"
+	meet_dialogue_button.custom_minimum_size = Vector2(520, 76)
+	meet_dialogue_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	GameState.style_menu_button(meet_dialogue_button, "blue")
+	meet_dialogue_button.pressed.connect(_on_MeetDialogue_pressed)
+	meet_classmates_challenges_box.add_child(meet_dialogue_button)
+
+	meet_question_button = Button.new()
+	meet_question_button.text = "Choose the Question"
+	meet_question_button.custom_minimum_size = Vector2(520, 76)
+	meet_question_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	GameState.style_menu_button(meet_question_button, "pink")
+	meet_question_button.pressed.connect(_on_MeetQuestion_pressed)
+	meet_classmates_challenges_box.add_child(meet_question_button)
+
+	meet_politeness_button = Button.new()
+	meet_politeness_button.text = "Politeness Fix"
+	meet_politeness_button.custom_minimum_size = Vector2(520, 76)
+	meet_politeness_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	GameState.style_menu_button(meet_politeness_button, "purple")
+	meet_politeness_button.pressed.connect(_on_MeetPoliteness_pressed)
+	meet_classmates_challenges_box.add_child(meet_politeness_button)
+
 	status_panel = PanelContainer.new()
 	status_panel.add_theme_stylebox_override("panel", _status_panel_style())
 	root_vbox.add_child(status_panel)
@@ -154,6 +189,7 @@ func _render_zone() -> void:
 
 	var is_school_gate := GameState.current_zone_id == "school_gate"
 	var is_classroom_survival := GameState.current_zone_id == "classroom_survival"
+	var is_meet_classmates := GameState.current_zone_id == "meet_classmates"
 	minigames_list.clear()
 
 	if is_school_gate:
@@ -162,6 +198,7 @@ func _render_zone() -> void:
 		minigames_list.visible = false
 		start_button.visible = true
 		classroom_challenges_box.visible = false
+		meet_classmates_challenges_box.visible = false
 		complete_button.visible = false
 		status_label.text = "Press Start to begin the School Gate."
 		return
@@ -173,8 +210,21 @@ func _render_zone() -> void:
 		minigames_list.visible = false
 		start_button.visible = false
 		classroom_challenges_box.visible = true
+		meet_classmates_challenges_box.visible = false
 		complete_button.visible = false
 		status_label.text = "Choose a challenge to start."
+		return
+
+	if is_meet_classmates:
+		top_spacer.custom_minimum_size = Vector2(0, 30)
+		minigame_title.visible = true
+		minigame_title.text = "Challenges"
+		minigames_list.visible = false
+		start_button.visible = false
+		classroom_challenges_box.visible = false
+		meet_classmates_challenges_box.visible = true
+		complete_button.visible = false
+		status_label.text = "Select one of the 3 challenges."
 		return
 
 	top_spacer.custom_minimum_size = Vector2(0, 0)
@@ -187,6 +237,7 @@ func _render_zone() -> void:
 	minigames_list.visible = true
 	start_button.visible = false
 	classroom_challenges_box.visible = false
+	meet_classmates_challenges_box.visible = false
 	complete_button.visible = true
 
 	if GameState.is_zone_completed(GameState.current_zone_id):
@@ -215,6 +266,23 @@ func _on_ClassroomLanguage_pressed() -> void:
 
 func _on_BackButton_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/WorldMap.tscn", true)
+
+func _show_not_implemented_notice(challenge_name: String) -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "Coming Soon"
+	dialog.dialog_text = challenge_name + " is not implemented yet."
+	dialog.ok_button_text = "OK"
+	add_child(dialog)
+	dialog.popup_centered()
+
+func _on_MeetDialogue_pressed() -> void:
+	_show_not_implemented_notice("Order the Dialogue")
+
+func _on_MeetQuestion_pressed() -> void:
+	_show_not_implemented_notice("Choose the Question")
+
+func _on_MeetPoliteness_pressed() -> void:
+	_show_not_implemented_notice("Politeness Fix")
 
 func _description_panel_style() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()

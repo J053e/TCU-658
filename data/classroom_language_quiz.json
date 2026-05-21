@@ -5,33 +5,33 @@
     {
       "id": "cl01",
       "prompt": "You are outside the classroom.\nWhat do you say?",
-      "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/at_door.png",
+      "image": "res://assets/zones/zone_02_classroom_survival/interactive/classroom_language/options/outside_classroom.png",
       "options": [
-        "May I come in?",
         "Goodbye!",
+        "May I come in?",
         "Thank you!"
       ],
-      "correct_index": 0,
+      "correct_index": 1,
       "correct_feedback": "Great! That is polite classroom language.",
       "incorrect_feedback": "Try again: ask permission to enter."
     },
     {
       "id": "cl02",
       "prompt": "You do not understand the teacher.\nWhat do you say?",
-      "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/board.png",
+      "image": "res://assets/zones/zone_02_classroom_survival/interactive/classroom_language/options/dont_understand.png",
       "options": [
-        "Can you repeat, please?",
         "Good night.",
-        "I am twelve years old."
+        "I am twelve years old.",
+        "Can you repeat, please?"
       ],
-      "correct_index": 0,
+      "correct_index": 2,
       "correct_feedback": "Excellent!",
       "incorrect_feedback": "Use a polite request for repetition."
     },
     {
       "id": "cl03",
       "prompt": "You need help with an assignment.\nWhat do you say?",
-      "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/notebook.png",
+      "image": "res://assets/zones/zone_02_classroom_survival/interactive/classroom_language/options/ask_for_help.png",
       "options": [
         "Can you help me, please?",
         "Bye!",
@@ -44,13 +44,13 @@
     {
       "id": "cl04",
       "prompt": "You want to ask a question.\nWhat do you do first?",
-      "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/hand_up.png",
+      "image": "res://assets/zones/zone_02_classroom_survival/interactive/classroom_language/options/raise_hand.png",
       "options": [
-        "Raise your hand.",
         "Close the door.",
-        "Go home."
+        "Go home.",
+        "Raise your hand."
       ],
-      "correct_index": 0,
+      "correct_index": 2,
       "correct_feedback": "Correct!",
       "incorrect_feedback": "First, raise your hand."
     }

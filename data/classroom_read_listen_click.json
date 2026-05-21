@@ -7,19 +7,19 @@
       "instruction": "Sit down.",
       "options": [
         {
-          "label": "chair",
-          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/chair.png"
-        },
-        {
           "label": "door",
           "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/door.png"
         },
         {
           "label": "window",
           "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/window.png"
+        },
+        {
+          "label": "chair",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/chair.png"
         }
       ],
-      "correct_index": 0,
+      "correct_index": 2,
       "correct_feedback": "Good!",
       "incorrect_feedback": "Try again."
     },
@@ -49,19 +49,19 @@
       "instruction": "Raise your hand.",
       "options": [
         {
-          "label": "student with hand up",
-          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/hand_up.png"
-        },
-        {
           "label": "student writing",
           "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/writing.png"
         },
         {
           "label": "student at door",
           "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/at_door.png"
+        },
+        {
+          "label": "student with hand up",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/hand_up.png"
         }
       ],
-      "correct_index": 0,
+      "correct_index": 2,
       "correct_feedback": "Nice!",
       "incorrect_feedback": "Look carefully."
     },
@@ -70,19 +70,19 @@
       "instruction": "Close the door.",
       "options": [
         {
-          "label": "door",
-          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/door.png"
-        },
-        {
           "label": "board",
           "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/board.png"
+        },
+        {
+          "label": "door",
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/door.png"
         },
         {
           "label": "book",
           "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/book.png"
         }
       ],
-      "correct_index": 0,
+      "correct_index": 1,
       "correct_feedback": "Excellent!",
       "incorrect_feedback": "Choose the correct object."
     },
