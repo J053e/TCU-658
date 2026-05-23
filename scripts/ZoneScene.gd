@@ -279,7 +279,7 @@ func _on_MeetDialogue_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/MeetOrderDialogue.tscn")
 
 func _on_MeetQuestion_pressed() -> void:
-	_show_not_implemented_notice("Choose the Question")
+	GameState.change_scene_with_transition("res://scenes/MeetChooseQuestion.tscn")
 
 func _on_MeetPoliteness_pressed() -> void:
 	_show_not_implemented_notice("Politeness Fix")

@@ -1,0 +1,54 @@
+{
+  "zone_id": "meet_classmates",
+  "title": "Choose the Question",
+  "situations": [
+    {
+      "id": "q1",
+      "answer": "My name is Diego.",
+      "options": [
+        "What's your name?",
+        "How old are you?",
+        "Where do you live?"
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Great question!",
+      "incorrect_feedback": "That question does not match the answer."
+    },
+    {
+      "id": "q2",
+      "answer": "I am twelve years old.",
+      "options": [
+        "How old are you?",
+        "What is your favorite color?",
+        "Are you a teacher?"
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Correct!",
+      "incorrect_feedback": "Try a question about age."
+    },
+    {
+      "id": "q3",
+      "answer": "I live in San Carlos.",
+      "options": [
+        "Where do you live?",
+        "What time is it?",
+        "Do you like science?"
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Nice!",
+      "incorrect_feedback": "The answer is about place."
+    },
+    {
+      "id": "q4",
+      "answer": "I am from Costa Rica.",
+      "options": [
+        "Where are you from?",
+        "What is your phone number?",
+        "How are you?"
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Excellent!",
+      "incorrect_feedback": "Choose the origin question."
+    }
+  ]
+}
