@@ -16,7 +16,7 @@
     "meet_classmates": {
       "zone_screen": "res://assets/zones/zone_03_meet_classmates/backgrounds/zone_screen.png",
       "minigames": {
-        "order_dialogue": "res://assets/zones/zone_03_meet_classmates/backgrounds/minigames/order_dialogue.png",
+        "order_dialogue": "res://assets/zones/zone_03_meet_classmates/backgrounds/minigames/order_the_dialogue.png",
         "choose_question": "res://assets/zones/zone_03_meet_classmates/backgrounds/minigames/choose_question.png",
         "politeness_fix": "res://assets/zones/zone_03_meet_classmates/backgrounds/minigames/politeness_fix.png"
       }

@@ -11,10 +11,12 @@ const BankDropAreaScript = preload("res://scripts/DialogueBankDropArea.gd")
 var progress_label: Label
 var prompt_label: Label
 var feedback_label: Label
+var top_spacer: Control
 var slots_box: VBoxContainer
 var bank_title: Label
 var bank_flow: FlowContainer
 var bank_panel
+var content_row: HBoxContainer
 var check_button: Button
 var continue_button: Button
 var back_button: Button
@@ -70,6 +72,10 @@ func _build_ui() -> void:
 	GameState.style_label(progress_label, 22, false)
 	root.add_child(progress_label)
 
+	top_spacer = Control.new()
+	top_spacer.custom_minimum_size = Vector2(0, 4)
+	root.add_child(top_spacer)
+
 	prompt_label = Label.new()
 	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -77,17 +83,17 @@ func _build_ui() -> void:
 	GameState.style_label(prompt_label, 22, true)
 	root.add_child(prompt_label)
 
-	var content := HBoxContainer.new()
-	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_theme_constant_override("separation", 12)
-	root.add_child(content)
+	content_row = HBoxContainer.new()
+	content_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content_row.add_theme_constant_override("separation", 12)
+	root.add_child(content_row)
 
 	var sockets_panel := PanelContainer.new()
 	sockets_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sockets_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	sockets_panel.add_theme_stylebox_override("panel", _panel_style())
-	content.add_child(sockets_panel)
+	content_row.add_child(sockets_panel)
 
 	var sockets_margin := MarginContainer.new()
 	sockets_margin.add_theme_constant_override("margin_left", 10)
@@ -106,7 +112,7 @@ func _build_ui() -> void:
 	bank_panel.custom_minimum_size = Vector2(470, 0)
 	bank_panel.add_theme_stylebox_override("panel", _panel_style())
 	bank_panel.sentence_returned.connect(_on_bank_sentence_returned)
-	content.add_child(bank_panel)
+	content_row.add_child(bank_panel)
 
 	var bank_margin := MarginContainer.new()
 	bank_margin.add_theme_constant_override("margin_left", 10)
@@ -231,11 +237,22 @@ func _show_dialogue() -> void:
 	answered_current = false
 	continue_button.disabled = true
 	continue_button.text = "Continue"
+	continue_button.visible = true
 	check_button.disabled = false
+	check_button.visible = true
 	repeat_button.visible = false
 	result_status_label.visible = false
 	feedback_label.text = ""
 	bank_title.text = "Sentence Bank (drag to sockets)"
+	top_spacer.custom_minimum_size = Vector2(0, 4)
+	content_row.visible = true
+	slots_box.visible = true
+	bank_panel.visible = true
+	progress_label.add_theme_font_size_override("font_size", 22)
+	progress_label.add_theme_constant_override("outline_size", 0)
+	prompt_label.add_theme_font_size_override("font_size", 22)
+	feedback_label.add_theme_font_size_override("font_size", 20)
+	result_status_label.add_theme_font_size_override("font_size", 18)
 
 	var dialogue: Dictionary = dialogues[current_index]
 	var label := String(dialogue.get("label", "Dialogue"))
@@ -292,13 +309,28 @@ func _render_bank() -> void:
 		var chip = DragSentenceButtonScript.new()
 		chip.setup(sid, String(current_sentence_map[sid]))
 		chip.drag_enabled = not answered_current
-		chip.custom_minimum_size = Vector2(210, 54)
+		chip.custom_minimum_size = Vector2(222, 56)
 		chip.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		chip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		GameState.style_menu_button(chip, "blue")
+		chip.set_chip_style(_bank_chip_style())
+		if chip.has_method("set_label_style"):
+			chip.set_label_style(GameState.pretty_font, 20)
 		bank_flow.add_child(chip)
 	if bank_panel != null:
 		bank_panel.set_locked(answered_current)
+
+func _bank_chip_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.21, 0.55, 0.93, 0.97)
+	sb.border_color = Color(0.76, 0.92, 1.0, 0.98)
+	sb.set_border_width_all(3)
+	sb.corner_radius_top_left = 20
+	sb.corner_radius_top_right = 20
+	sb.corner_radius_bottom_right = 20
+	sb.corner_radius_bottom_left = 20
+	sb.shadow_color = Color(0, 0, 0, 0.22)
+	sb.shadow_size = 4
+	sb.shadow_offset = Vector2(0, 2)
+	return sb
 
 func _on_slot_sentence_dropped(slot_index: int, sentence_id: String) -> void:
 	if answered_current:
@@ -410,14 +442,20 @@ func _show_summary(result: Dictionary) -> void:
 	var attempts := int(result.get("attempts", 0))
 
 	progress_label.text = "Challenge Complete"
-	prompt_label.text = ""
-	slots_box.visible = false
-	bank_panel.visible = false
+	progress_label.add_theme_font_size_override("font_size", 26)
+	progress_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.95))
+	progress_label.add_theme_constant_override("outline_size", 4)
+	top_spacer.custom_minimum_size = Vector2(0, 84)
+	prompt_label.custom_minimum_size = Vector2(0, 96)
+	prompt_label.add_theme_font_size_override("font_size", 24)
+	prompt_label.text = "Order the dialogue from start to finish."
+	content_row.visible = false
 	check_button.visible = false
+	feedback_label.add_theme_font_size_override("font_size", 22)
 	if passed:
-		feedback_label.text = "Great dialogue work! Best score: " + str(best_correct) + "/" + str(total)
+		feedback_label.text = "Stamp progress saved.\nBest score: " + str(best_correct) + "/" + str(total)
 	else:
-		feedback_label.text = "You need at least 70%. Best score: " + str(best_correct) + "/" + str(total)
+		feedback_label.text = "You need at least 70%.\nBest score: " + str(best_correct) + "/" + str(total)
 	if attempts > 1:
 		feedback_label.text += " Attempts: " + str(attempts)
 
@@ -425,6 +463,7 @@ func _show_summary(result: Dictionary) -> void:
 	continue_button.disabled = false
 	repeat_button.visible = true
 	result_status_label.visible = true
+	result_status_label.add_theme_font_size_override("font_size", 20)
 	if passed:
 		result_status_label.text = "Status: Approved"
 		result_status_label.add_theme_color_override("font_color", Color(0.76, 1.0, 0.74))
@@ -433,8 +472,7 @@ func _show_summary(result: Dictionary) -> void:
 		result_status_label.add_theme_color_override("font_color", Color(1.0, 0.72, 0.72))
 
 func _on_repeat_pressed() -> void:
-	slots_box.visible = true
-	bank_panel.visible = true
+	content_row.visible = true
 	check_button.visible = true
 	_start_new_attempt()
 
