@@ -14,7 +14,7 @@ const ZONE_BADGE_PATHS := {
 }
 const ZONE_CHALLENGE_REQUIREMENTS := {
 	"classroom_survival": ["classroom_read_listen_click", "classroom_language"],
-	"meet_classmates": ["meet_order_dialogue"]
+	"meet_classmates": ["meet_order_dialogue", "meet_choose_question", "meet_politeness_fix"]
 }
 
 var content := {}

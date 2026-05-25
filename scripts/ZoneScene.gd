@@ -282,7 +282,7 @@ func _on_MeetQuestion_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/MeetChooseQuestion.tscn")
 
 func _on_MeetPoliteness_pressed() -> void:
-	_show_not_implemented_notice("Politeness Fix")
+	GameState.change_scene_with_transition("res://scenes/MeetPolitenessFix.tscn")
 
 func _description_panel_style() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
