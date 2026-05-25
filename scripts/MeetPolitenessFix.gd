@@ -54,15 +54,15 @@ func _build_ui() -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 44)
-	margin.add_theme_constant_override("margin_top", 24)
+	margin.add_theme_constant_override("margin_top", 18)
 	margin.add_theme_constant_override("margin_right", 44)
-	margin.add_theme_constant_override("margin_bottom", 28)
+	margin.add_theme_constant_override("margin_bottom", 14)
 	add_child(margin)
 
 	var root := VBoxContainer.new()
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_theme_constant_override("separation", 8)
+	root.add_theme_constant_override("separation", 6)
 	margin.add_child(root)
 
 	screen_title_label = Label.new()
@@ -72,7 +72,7 @@ func _build_ui() -> void:
 	root.add_child(screen_title_label)
 
 	top_spacer = Control.new()
-	top_spacer.custom_minimum_size = Vector2(0, 4)
+	top_spacer.custom_minimum_size = Vector2(0, 0)
 	root.add_child(top_spacer)
 
 	progress_label = Label.new()
@@ -84,7 +84,7 @@ func _build_ui() -> void:
 	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	prompt_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	prompt_label.custom_minimum_size = Vector2(0, 40)
+	prompt_label.custom_minimum_size = Vector2(0, 34)
 	GameState.style_label(prompt_label, 22, true)
 	root.add_child(prompt_label)
 
@@ -97,7 +97,7 @@ func _build_ui() -> void:
 	var image_panel := PanelContainer.new()
 	image_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	image_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	image_panel.custom_minimum_size = Vector2(0, 170)
+	image_panel.custom_minimum_size = Vector2(0, 142)
 	image_panel.add_theme_stylebox_override("panel", _panel_style())
 	content_vbox.add_child(image_panel)
 
@@ -109,7 +109,7 @@ func _build_ui() -> void:
 	image_panel.add_child(image_margin)
 
 	image_rect = TextureRect.new()
-	image_rect.custom_minimum_size = Vector2(0, 150)
+	image_rect.custom_minimum_size = Vector2(0, 118)
 	image_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	image_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -118,6 +118,7 @@ func _build_ui() -> void:
 
 	var dialogue_panel := PanelContainer.new()
 	dialogue_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	dialogue_panel.custom_minimum_size = Vector2(0, 96)
 	dialogue_panel.add_theme_stylebox_override("panel", _panel_style())
 	content_vbox.add_child(dialogue_panel)
 
@@ -163,7 +164,7 @@ func _build_ui() -> void:
 	bank_panel = BankDropAreaScript.new()
 	bank_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bank_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	bank_panel.custom_minimum_size = Vector2(0, 132)
+	bank_panel.custom_minimum_size = Vector2(0, 110)
 	bank_panel.add_theme_stylebox_override("panel", _panel_style())
 	bank_panel.sentence_returned.connect(_on_bank_sentence_returned)
 	content_vbox.add_child(bank_panel)
@@ -176,7 +177,7 @@ func _build_ui() -> void:
 	bank_panel.add_child(bank_margin)
 
 	var bank_vbox := VBoxContainer.new()
-	bank_vbox.add_theme_constant_override("separation", 8)
+	bank_vbox.add_theme_constant_override("separation", 4)
 	bank_margin.add_child(bank_vbox)
 
 	bank_title = Label.new()
@@ -187,6 +188,8 @@ func _build_ui() -> void:
 
 	bank_flow = FlowContainer.new()
 	bank_flow.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bank_flow.alignment = FlowContainer.ALIGNMENT_CENTER
+	bank_flow.last_wrap_alignment = FlowContainer.LAST_WRAP_ALIGNMENT_CENTER
 	bank_flow.add_theme_constant_override("h_separation", 8)
 	bank_flow.add_theme_constant_override("v_separation", 8)
 	bank_vbox.add_child(bank_flow)
@@ -195,7 +198,7 @@ func _build_ui() -> void:
 	feedback_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	feedback_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	feedback_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	feedback_label.custom_minimum_size = Vector2(0, 30)
+	feedback_label.custom_minimum_size = Vector2(0, 22)
 	GameState.style_label(feedback_label, 20, true)
 	root.add_child(feedback_label)
 
@@ -203,6 +206,7 @@ func _build_ui() -> void:
 	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.alignment = BoxContainer.ALIGNMENT_CENTER
 	actions.add_theme_constant_override("separation", 10)
+	actions.custom_minimum_size = Vector2(0, 56)
 	root.add_child(actions)
 
 	check_button = Button.new()
@@ -236,6 +240,10 @@ func _build_ui() -> void:
 	result_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	GameState.style_label(result_status_label, 18, true)
 	actions.add_child(result_status_label)
+
+	var bottom_spacer := Control.new()
+	bottom_spacer.custom_minimum_size = Vector2(0, 10)
+	root.add_child(bottom_spacer)
 
 func _panel_style() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
@@ -304,21 +312,25 @@ func _show_situation() -> void:
 
 	answered_current = false
 	screen_title_label.visible = true
+	check_button.visible = true
+	continue_button.visible = true
+	back_button.visible = true
 	continue_button.disabled = true
 	continue_button.text = "Continue"
-	continue_button.visible = true
 	check_button.disabled = false
-	check_button.visible = true
 	repeat_button.visible = false
 	result_status_label.visible = false
 	feedback_label.text = ""
 	bank_title.text = "Word Bank (drag to socket)"
-	top_spacer.custom_minimum_size = Vector2(0, 4)
+	top_spacer.custom_minimum_size = Vector2(0, 0)
 	content_vbox.visible = true
 	progress_label.add_theme_font_size_override("font_size", 22)
 	progress_label.add_theme_constant_override("outline_size", 0)
+	progress_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0))
 	prompt_label.add_theme_font_size_override("font_size", 22)
+	prompt_label.custom_minimum_size = Vector2(0, 34)
 	feedback_label.add_theme_font_size_override("font_size", 20)
+	feedback_label.custom_minimum_size = Vector2(0, 22)
 	result_status_label.add_theme_font_size_override("font_size", 18)
 
 	var item: Dictionary = situations[current_index]
@@ -327,7 +339,7 @@ func _show_situation() -> void:
 
 	var image_path := String(item.get("image", ""))
 	if image_path != "" and ResourceLoader.exists(image_path):
-		image_rect.texture = _load_fitted_image(image_path, Vector2i(1000, 140))
+		image_rect.texture = _load_fitted_image(image_path, Vector2i(1000, 112))
 	else:
 		image_rect.texture = null
 
