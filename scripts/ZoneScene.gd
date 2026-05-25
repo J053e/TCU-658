@@ -1,8 +1,10 @@
 ﻿extends Control
 
 var zone_title: Label
+var zone_title_panel: PanelContainer
 var zone_description: Label
 var minigame_title: Label
+var minigame_title_panel: PanelContainer
 var minigames_list: ItemList
 var start_button: Button
 var classroom_challenges_box: VBoxContainer
@@ -12,6 +14,10 @@ var meet_classmates_challenges_box: VBoxContainer
 var meet_dialogue_button: Button
 var meet_question_button: Button
 var meet_politeness_button: Button
+var my_school_card_challenges_box: VBoxContainer
+var my_school_card_profile_button: Button
+var my_school_card_label_button: Button
+var my_school_card_sentences_button: Button
 var top_spacer: Control
 var status_panel: PanelContainer
 var status_label: Label
@@ -45,11 +51,22 @@ func _build_ui() -> void:
 	top_spacer.custom_minimum_size = Vector2(0, 0)
 	root_vbox.add_child(top_spacer)
 
+	zone_title_panel = PanelContainer.new()
+	zone_title_panel.add_theme_stylebox_override("panel", _description_panel_style())
+	root_vbox.add_child(zone_title_panel)
+
+	var zone_title_margin := MarginContainer.new()
+	zone_title_margin.add_theme_constant_override("margin_left", 16)
+	zone_title_margin.add_theme_constant_override("margin_top", 8)
+	zone_title_margin.add_theme_constant_override("margin_right", 16)
+	zone_title_margin.add_theme_constant_override("margin_bottom", 8)
+	zone_title_panel.add_child(zone_title_margin)
+
 	zone_title = Label.new()
 	zone_title.text = "Zone Title"
 	zone_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	GameState.style_label(zone_title, 36, true)
-	root_vbox.add_child(zone_title)
+	zone_title_margin.add_child(zone_title)
 
 	var desc_panel := PanelContainer.new()
 	desc_panel.add_theme_stylebox_override("panel", _description_panel_style())
@@ -69,11 +86,22 @@ func _build_ui() -> void:
 	GameState.style_label(zone_description, 22, false)
 	desc_margin.add_child(zone_description)
 
+	minigame_title_panel = PanelContainer.new()
+	minigame_title_panel.add_theme_stylebox_override("panel", _description_panel_style())
+	root_vbox.add_child(minigame_title_panel)
+
+	var minigame_title_margin := MarginContainer.new()
+	minigame_title_margin.add_theme_constant_override("margin_left", 16)
+	minigame_title_margin.add_theme_constant_override("margin_top", 8)
+	minigame_title_margin.add_theme_constant_override("margin_right", 16)
+	minigame_title_margin.add_theme_constant_override("margin_bottom", 8)
+	minigame_title_panel.add_child(minigame_title_margin)
+
 	minigame_title = Label.new()
 	minigame_title.text = "Minigames"
 	minigame_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	GameState.style_label(minigame_title, 28, false)
-	root_vbox.add_child(minigame_title)
+	minigame_title_margin.add_child(minigame_title)
 
 	minigames_list = ItemList.new()
 	minigames_list.custom_minimum_size = Vector2(560, 220)
@@ -142,6 +170,37 @@ func _build_ui() -> void:
 	meet_politeness_button.pressed.connect(_on_MeetPoliteness_pressed)
 	meet_classmates_challenges_box.add_child(meet_politeness_button)
 
+	my_school_card_challenges_box = VBoxContainer.new()
+	my_school_card_challenges_box.visible = false
+	my_school_card_challenges_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	my_school_card_challenges_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	my_school_card_challenges_box.add_theme_constant_override("separation", 12)
+	root_vbox.add_child(my_school_card_challenges_box)
+
+	my_school_card_profile_button = Button.new()
+	my_school_card_profile_button.text = "Fill the Profile"
+	my_school_card_profile_button.custom_minimum_size = Vector2(520, 76)
+	my_school_card_profile_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	GameState.style_menu_button(my_school_card_profile_button, "green")
+	my_school_card_profile_button.pressed.connect(_on_MySchoolCardProfile_pressed)
+	my_school_card_challenges_box.add_child(my_school_card_profile_button)
+
+	my_school_card_label_button = Button.new()
+	my_school_card_label_button.text = "Label the Classroom"
+	my_school_card_label_button.custom_minimum_size = Vector2(520, 76)
+	my_school_card_label_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	GameState.style_menu_button(my_school_card_label_button, "blue")
+	my_school_card_label_button.pressed.connect(_on_MySchoolCardLabel_pressed)
+	my_school_card_challenges_box.add_child(my_school_card_label_button)
+
+	my_school_card_sentences_button = Button.new()
+	my_school_card_sentences_button.text = "Simple Personal Sentences"
+	my_school_card_sentences_button.custom_minimum_size = Vector2(520, 76)
+	my_school_card_sentences_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	GameState.style_menu_button(my_school_card_sentences_button, "purple")
+	my_school_card_sentences_button.pressed.connect(_on_MySchoolCardSentences_pressed)
+	my_school_card_challenges_box.add_child(my_school_card_sentences_button)
+
 	status_panel = PanelContainer.new()
 	status_panel.add_theme_stylebox_override("panel", _status_panel_style())
 	root_vbox.add_child(status_panel)
@@ -190,15 +249,26 @@ func _render_zone() -> void:
 	var is_school_gate := GameState.current_zone_id == "school_gate"
 	var is_classroom_survival := GameState.current_zone_id == "classroom_survival"
 	var is_meet_classmates := GameState.current_zone_id == "meet_classmates"
+	var is_my_school_card := GameState.current_zone_id == "my_school_card"
 	minigames_list.clear()
+
+	# Keep title backgrounds only for zone 4 readability.
+	if is_my_school_card:
+		zone_title_panel.add_theme_stylebox_override("panel", _description_panel_style())
+		minigame_title_panel.add_theme_stylebox_override("panel", _description_panel_style())
+	else:
+		zone_title_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		minigame_title_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
 	if is_school_gate:
 		top_spacer.custom_minimum_size = Vector2(0, 78)
 		minigame_title.visible = false
+		minigame_title_panel.visible = false
 		minigames_list.visible = false
 		start_button.visible = true
 		classroom_challenges_box.visible = false
 		meet_classmates_challenges_box.visible = false
+		my_school_card_challenges_box.visible = false
 		complete_button.visible = false
 		status_label.text = "Press Start to begin the School Gate."
 		return
@@ -206,11 +276,13 @@ func _render_zone() -> void:
 	if is_classroom_survival:
 		top_spacer.custom_minimum_size = Vector2(0, 38)
 		minigame_title.visible = true
+		minigame_title_panel.visible = true
 		minigame_title.text = "Challenges"
 		minigames_list.visible = false
 		start_button.visible = false
 		classroom_challenges_box.visible = true
 		meet_classmates_challenges_box.visible = false
+		my_school_card_challenges_box.visible = false
 		complete_button.visible = false
 		status_label.text = "Choose a challenge to start."
 		return
@@ -218,11 +290,27 @@ func _render_zone() -> void:
 	if is_meet_classmates:
 		top_spacer.custom_minimum_size = Vector2(0, 30)
 		minigame_title.visible = true
+		minigame_title_panel.visible = true
 		minigame_title.text = "Challenges"
 		minigames_list.visible = false
 		start_button.visible = false
 		classroom_challenges_box.visible = false
 		meet_classmates_challenges_box.visible = true
+		my_school_card_challenges_box.visible = false
+		complete_button.visible = false
+		status_label.text = "Select one of the 3 challenges."
+		return
+
+	if is_my_school_card:
+		top_spacer.custom_minimum_size = Vector2(0, 30)
+		minigame_title.visible = true
+		minigame_title_panel.visible = true
+		minigame_title.text = "Challenges"
+		minigames_list.visible = false
+		start_button.visible = false
+		classroom_challenges_box.visible = false
+		meet_classmates_challenges_box.visible = false
+		my_school_card_challenges_box.visible = true
 		complete_button.visible = false
 		status_label.text = "Select one of the 3 challenges."
 		return
@@ -233,11 +321,13 @@ func _render_zone() -> void:
 		minigames_list.add_item(minigame_name + " (placeholder)")
 
 	minigame_title.visible = true
+	minigame_title_panel.visible = true
 	minigame_title.text = "Minigames"
 	minigames_list.visible = true
 	start_button.visible = false
 	classroom_challenges_box.visible = false
 	meet_classmates_challenges_box.visible = false
+	my_school_card_challenges_box.visible = false
 	complete_button.visible = true
 
 	if GameState.is_zone_completed(GameState.current_zone_id):
@@ -283,6 +373,15 @@ func _on_MeetQuestion_pressed() -> void:
 
 func _on_MeetPoliteness_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/MeetPolitenessFix.tscn")
+
+func _on_MySchoolCardProfile_pressed() -> void:
+	GameState.change_scene_with_transition("res://scenes/MySchoolCardFillProfilePlaceholder.tscn")
+
+func _on_MySchoolCardLabel_pressed() -> void:
+	_show_not_implemented_notice("Label the Classroom")
+
+func _on_MySchoolCardSentences_pressed() -> void:
+	_show_not_implemented_notice("Simple Personal Sentences")
 
 func _description_panel_style() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
