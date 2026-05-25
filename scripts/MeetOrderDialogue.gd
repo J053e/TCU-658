@@ -11,6 +11,7 @@ const BankDropAreaScript = preload("res://scripts/DialogueBankDropArea.gd")
 var progress_label: Label
 var prompt_label: Label
 var feedback_label: Label
+var screen_title_label: Label
 var top_spacer: Control
 var slots_box: VBoxContainer
 var bank_title: Label
@@ -61,23 +62,24 @@ func _build_ui() -> void:
 	root.add_theme_constant_override("separation", 8)
 	margin.add_child(root)
 
-	var title := Label.new()
-	title.text = "Order the Dialogue"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	GameState.style_label(title, 36, true)
-	root.add_child(title)
+	screen_title_label = Label.new()
+	screen_title_label.text = "Order the Dialogue"
+	screen_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	GameState.style_label(screen_title_label, 36, true)
+	root.add_child(screen_title_label)
+
+	top_spacer = Control.new()
+	top_spacer.custom_minimum_size = Vector2(0, 4)
+	root.add_child(top_spacer)
 
 	progress_label = Label.new()
 	progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	GameState.style_label(progress_label, 22, false)
 	root.add_child(progress_label)
 
-	top_spacer = Control.new()
-	top_spacer.custom_minimum_size = Vector2(0, 4)
-	root.add_child(top_spacer)
-
 	prompt_label = Label.new()
 	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	prompt_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	prompt_label.custom_minimum_size = Vector2(0, 40)
 	GameState.style_label(prompt_label, 22, true)
@@ -140,6 +142,7 @@ func _build_ui() -> void:
 
 	feedback_label = Label.new()
 	feedback_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	feedback_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	feedback_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	feedback_label.custom_minimum_size = Vector2(0, 30)
 	GameState.style_label(feedback_label, 20, true)
@@ -235,6 +238,7 @@ func _show_dialogue() -> void:
 		return
 
 	answered_current = false
+	screen_title_label.visible = true
 	continue_button.disabled = true
 	continue_button.text = "Continue"
 	continue_button.visible = true
@@ -442,16 +446,18 @@ func _show_summary(result: Dictionary) -> void:
 	var attempts := int(result.get("attempts", 0))
 
 	progress_label.text = "Challenge Complete"
+	screen_title_label.visible = false
 	progress_label.add_theme_font_size_override("font_size", 26)
 	progress_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.95))
 	progress_label.add_theme_constant_override("outline_size", 4)
-	top_spacer.custom_minimum_size = Vector2(0, 84)
-	prompt_label.custom_minimum_size = Vector2(0, 96)
+	top_spacer.custom_minimum_size = Vector2(0, 112)
+	prompt_label.custom_minimum_size = Vector2(0, 120)
 	prompt_label.add_theme_font_size_override("font_size", 24)
 	prompt_label.text = "Order the dialogue from start to finish."
 	content_row.visible = false
 	check_button.visible = false
-	feedback_label.add_theme_font_size_override("font_size", 22)
+	feedback_label.custom_minimum_size = Vector2(0, 64)
+	feedback_label.add_theme_font_size_override("font_size", 20)
 	if passed:
 		feedback_label.text = "Stamp progress saved.\nBest score: " + str(best_correct) + "/" + str(total)
 	else:

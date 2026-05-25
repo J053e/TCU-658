@@ -10,6 +10,7 @@ var feedback_label: Label
 var options_row: HBoxContainer
 var top_spacer: Control
 var summary_spacer: Control
+var screen_title_label: Label
 var option_buttons := []
 var continue_button: Button
 var back_button: Button
@@ -47,17 +48,17 @@ func _build_ui() -> void:
 	margin.add_child(center)
 
 	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 10)
+	root.add_theme_constant_override("separation", 8)
 	root.custom_minimum_size = Vector2(1120, 590)
 	root.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	root.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	center.add_child(root)
 
-	var title := Label.new()
-	title.text = "Read, Listen and Click"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	GameState.style_label(title, 36, true)
-	root.add_child(title)
+	screen_title_label = Label.new()
+	screen_title_label.text = "Read, Listen and Click"
+	screen_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	GameState.style_label(screen_title_label, 36, true)
+	root.add_child(screen_title_label)
 
 	top_spacer = Control.new()
 	top_spacer.custom_minimum_size = Vector2(0, 12)
@@ -70,6 +71,7 @@ func _build_ui() -> void:
 
 	instruction_label = Label.new()
 	instruction_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	instruction_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	instruction_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	instruction_label.custom_minimum_size = Vector2(0, 56)
 	GameState.style_label(instruction_label, 28, true)
@@ -92,6 +94,7 @@ func _build_ui() -> void:
 
 	feedback_label = Label.new()
 	feedback_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	feedback_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	feedback_label.custom_minimum_size = Vector2(0, 34)
 	GameState.style_label(feedback_label, 20, true)
 	root.add_child(feedback_label)
@@ -194,9 +197,15 @@ func _show_question() -> void:
 		return
 
 	var q: Dictionary = questions[current_index]
+	screen_title_label.visible = true
 	top_spacer.custom_minimum_size = Vector2(0, 12)
 	progress_label.text = "Instruction " + str(current_index + 1) + "/" + str(questions.size())
+	progress_label.add_theme_font_size_override("font_size", 22)
+	progress_label.add_theme_constant_override("outline_size", 0)
+	instruction_label.add_theme_font_size_override("font_size", 28)
 	instruction_label.text = q.get("instruction", "")
+	instruction_label.custom_minimum_size = Vector2(0, 56)
+	feedback_label.add_theme_font_size_override("font_size", 20)
 	feedback_label.text = ""
 	answered_current = false
 	finished = false
@@ -269,8 +278,13 @@ func _show_summary(result: Dictionary) -> void:
 	var attempts := int(result.get("attempts", 0))
 
 	progress_label.text = "Challenge Complete"
-	top_spacer.custom_minimum_size = Vector2(0, 72)
-	instruction_label.custom_minimum_size = Vector2(0, 110)
+	screen_title_label.visible = false
+	progress_label.add_theme_font_size_override("font_size", 26)
+	progress_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.95))
+	progress_label.add_theme_constant_override("outline_size", 4)
+	top_spacer.custom_minimum_size = Vector2(0, 84)
+	instruction_label.custom_minimum_size = Vector2(0, 120)
+	instruction_label.add_theme_font_size_override("font_size", 24)
 	if passed:
 		instruction_label.text = "Great! You passed Read, Listen and Click.\nBest score: " + str(best_correct) + "/" + str(total)
 		feedback_label.text = "You can understand simple classroom instructions."
@@ -282,11 +296,14 @@ func _show_summary(result: Dictionary) -> void:
 
 	options_row.visible = false
 	summary_spacer.visible = true
-	summary_spacer.custom_minimum_size = Vector2(0, 70)
+	summary_spacer.custom_minimum_size = Vector2(0, 0)
+	feedback_label.custom_minimum_size = Vector2(0, 64)
+	feedback_label.add_theme_font_size_override("font_size", 20)
 	continue_button.text = "Back to Zone"
 	continue_button.disabled = false
 	repeat_button.visible = true
 	result_status_label.visible = true
+	result_status_label.add_theme_font_size_override("font_size", 20)
 	if passed:
 		result_status_label.text = "Status: Approved"
 		result_status_label.add_theme_color_override("font_color", Color(0.76, 1.0, 0.74))

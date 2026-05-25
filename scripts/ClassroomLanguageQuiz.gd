@@ -94,6 +94,7 @@ func _build_ui() -> void:
 
 	feedback_label = Label.new()
 	feedback_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	feedback_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	feedback_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	feedback_label.custom_minimum_size = Vector2(0, 14)
 	feedback_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -159,10 +160,14 @@ func _show_question() -> void:
 
 	var q: Dictionary = questions[current_index]
 	progress_label.text = "Question " + str(current_index + 1) + "/" + str(questions.size())
+	progress_label.add_theme_font_size_override("font_size", 24)
+	progress_label.add_theme_constant_override("outline_size", 0)
 	top_spacer.custom_minimum_size = Vector2(0, 34)
 	question_label.custom_minimum_size = Vector2(0, 88)
+	question_label.add_theme_font_size_override("font_size", 24)
 	question_label.text = q.get("prompt", "")
 	feedback_label.custom_minimum_size = Vector2(0, 14)
+	feedback_label.add_theme_font_size_override("font_size", 20)
 	feedback_label.text = ""
 	answered_current = false
 	quiz_finished = false
@@ -230,8 +235,12 @@ func _show_summary(result: Dictionary) -> void:
 
 	quiz_finished = true
 	progress_label.text = "Challenge Complete"
-	top_spacer.custom_minimum_size = Vector2(0, 110)
-	question_label.custom_minimum_size = Vector2(0, 96)
+	progress_label.add_theme_font_size_override("font_size", 26)
+	progress_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.95))
+	progress_label.add_theme_constant_override("outline_size", 4)
+	top_spacer.custom_minimum_size = Vector2(0, 84)
+	question_label.custom_minimum_size = Vector2(0, 120)
+	question_label.add_theme_font_size_override("font_size", 24)
 	if passed:
 		question_label.text = "Great! You passed Classroom Language.\nBest score: " + str(best_correct) + "/" + str(total)
 		feedback_label.text = "Your classroom expressions are improving."
@@ -248,12 +257,14 @@ func _show_summary(result: Dictionary) -> void:
 	options_box.visible = false
 	for b in option_buttons:
 		b.visible = false
-	feedback_label.custom_minimum_size = Vector2(0, 18)
-	bottom_spacer.custom_minimum_size = Vector2(0, 12)
+	feedback_label.custom_minimum_size = Vector2(0, 64)
+	feedback_label.add_theme_font_size_override("font_size", 20)
+	bottom_spacer.custom_minimum_size = Vector2(0, 0)
 	continue_button.text = "Back to Zone"
 	continue_button.disabled = false
 	repeat_button.visible = true
 	result_status_label.visible = true
+	result_status_label.add_theme_font_size_override("font_size", 20)
 	if passed:
 		result_status_label.text = "Status: Approved"
 		result_status_label.add_theme_color_override("font_color", Color(0.76, 1.0, 0.74))
