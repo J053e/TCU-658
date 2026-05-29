@@ -3,6 +3,10 @@ extends Control
 const CHALLENGE_ID := "my_school_card_fill_profile"
 const PASS_RATIO := 0.70
 
+const DropSlotScript = preload("res://scripts/DialogueDropSlot.gd")
+const DragSentenceButtonScript = preload("res://scripts/DragSentenceButton.gd")
+const BankDropAreaScript = preload("res://scripts/DialogueBankDropArea.gd")
+
 const VALID_PROVINCES := [
 	"San Jose",
 	"Heredia",
@@ -28,26 +32,27 @@ const VALID_GRADES := [
 
 var title_label: Label
 var instruction_label: Label
+var feedback_panel: PanelContainer
 var feedback_label: Label
+var summary_panel: PanelContainer
 var summary_details_label: Label
 var summary_scroll: ScrollContainer
 var card_panel: PanelContainer
-var bank_panel: PanelContainer
+var bank_panel
 var content_row: HBoxContainer
 var check_button: Button
 var continue_button: Button
 var back_button: Button
 var repeat_button: Button
 var status_label: Label
-
-var name_input: LineEdit
-var last_name_input: LineEdit
-var age_input: LineEdit
-var grade_input: LineEdit
-var province_input: LineEdit
 var bank_flow: FlowContainer
 
-var active_input: LineEdit = null
+var slot_nodes: Dictionary = {}
+var slot_assignments: Dictionary = {}
+var slot_field_by_index: Array[String] = []
+var token_text_by_id: Dictionary = {}
+var bank_ids: Array[String] = []
+
 var finished: bool = false
 
 func _ready() -> void:
@@ -81,7 +86,7 @@ func _build_ui() -> void:
 	root.add_child(title_label)
 
 	instruction_label = Label.new()
-	instruction_label.text = "Write your information.  Use simple English.  Check your spelling."
+	instruction_label.text = "Write your information. Use simple English. Check your spelling."
 	instruction_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	instruction_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	instruction_label.custom_minimum_size = Vector2(0, 44)
@@ -99,6 +104,7 @@ func _build_ui() -> void:
 	card_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	card_panel.custom_minimum_size = Vector2(0, 430)
+	card_panel.add_theme_stylebox_override("panel", _panel_style())
 	content_row.add_child(card_panel)
 
 	var card_margin := MarginContainer.new()
@@ -125,31 +131,24 @@ func _build_ui() -> void:
 	fields_grid.add_theme_constant_override("v_separation", 10)
 	card_vbox.add_child(fields_grid)
 
-	_add_field_with_input(fields_grid, "Name:", "name")
-	name_input = fields_grid.get_child(fields_grid.get_child_count() - 1) as LineEdit
-
-	_add_field_with_input(fields_grid, "Last name:", "last_name")
-	last_name_input = fields_grid.get_child(fields_grid.get_child_count() - 1) as LineEdit
-
-	_add_field_with_input(fields_grid, "Age:", "age")
-	age_input = fields_grid.get_child(fields_grid.get_child_count() - 1) as LineEdit
-
-	grade_input = _add_grade_field(fields_grid)
-
+	_add_socket_field(fields_grid, "Name:", "name")
+	_add_socket_field(fields_grid, "Last name:", "last_name")
+	_add_socket_field(fields_grid, "Age:", "age")
+	_add_socket_field(fields_grid, "Grade:", "grade", "grade")
 	_add_field_with_label(fields_grid, "Country:", "Costa Rica")
+	_add_socket_field(fields_grid, "Province:", "province")
 
-	_add_field_with_input(fields_grid, "Province:", "province")
-	province_input = fields_grid.get_child(fields_grid.get_child_count() - 1) as LineEdit
-
-	bank_panel = PanelContainer.new()
+	bank_panel = BankDropAreaScript.new()
 	bank_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bank_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	bank_panel.custom_minimum_size = Vector2(340, 430)
+	bank_panel.add_theme_stylebox_override("panel", _panel_style())
+	bank_panel.sentence_returned.connect(_on_bank_sentence_returned)
 	content_row.add_child(bank_panel)
 
 	var bank_margin := MarginContainer.new()
 	bank_margin.add_theme_constant_override("margin_left", 10)
-	bank_margin.add_theme_constant_override("margin_top", 10)
+	bank_margin.add_theme_constant_override("margin_top", 14)
 	bank_margin.add_theme_constant_override("margin_right", 10)
 	bank_margin.add_theme_constant_override("margin_bottom", 10)
 	bank_panel.add_child(bank_margin)
@@ -164,6 +163,10 @@ func _build_ui() -> void:
 	GameState.style_label(bank_title, 24, false)
 	bank_vbox.add_child(bank_title)
 
+	var bank_top_spacer := Control.new()
+	bank_top_spacer.custom_minimum_size = Vector2(0, 8)
+	bank_vbox.add_child(bank_top_spacer)
+
 	var bank_scroll := ScrollContainer.new()
 	bank_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bank_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -171,13 +174,31 @@ func _build_ui() -> void:
 	bank_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	bank_vbox.add_child(bank_scroll)
 
+	var bank_content_margin := MarginContainer.new()
+	bank_content_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bank_content_margin.add_theme_constant_override("margin_top", 36)
+	bank_content_margin.add_theme_constant_override("margin_bottom", 6)
+	bank_scroll.add_child(bank_content_margin)
+
 	bank_flow = FlowContainer.new()
 	bank_flow.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bank_flow.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	bank_flow.alignment = FlowContainer.ALIGNMENT_CENTER
 	bank_flow.add_theme_constant_override("h_separation", 8)
 	bank_flow.add_theme_constant_override("v_separation", 8)
-	bank_scroll.add_child(bank_flow)
+	bank_content_margin.add_child(bank_flow)
+
+	feedback_panel = PanelContainer.new()
+	feedback_panel.visible = false
+	feedback_panel.add_theme_stylebox_override("panel", _result_text_panel_style())
+	root.add_child(feedback_panel)
+
+	var feedback_margin := MarginContainer.new()
+	feedback_margin.add_theme_constant_override("margin_left", 12)
+	feedback_margin.add_theme_constant_override("margin_top", 8)
+	feedback_margin.add_theme_constant_override("margin_right", 12)
+	feedback_margin.add_theme_constant_override("margin_bottom", 8)
+	feedback_panel.add_child(feedback_margin)
 
 	feedback_label = Label.new()
 	feedback_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -185,16 +206,27 @@ func _build_ui() -> void:
 	feedback_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	feedback_label.custom_minimum_size = Vector2(0, 36)
 	GameState.style_label(feedback_label, 20, true)
-	root.add_child(feedback_label)
+	feedback_margin.add_child(feedback_label)
+
+	summary_panel = PanelContainer.new()
+	summary_panel.visible = false
+	summary_panel.add_theme_stylebox_override("panel", _result_text_panel_style())
+	root.add_child(summary_panel)
+
+	var summary_margin := MarginContainer.new()
+	summary_margin.add_theme_constant_override("margin_left", 12)
+	summary_margin.add_theme_constant_override("margin_top", 10)
+	summary_margin.add_theme_constant_override("margin_right", 12)
+	summary_margin.add_theme_constant_override("margin_bottom", 10)
+	summary_panel.add_child(summary_margin)
 
 	summary_scroll = ScrollContainer.new()
-	summary_scroll.visible = false
 	summary_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	summary_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	summary_scroll.custom_minimum_size = Vector2(0, 220)
 	summary_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
-	summary_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	root.add_child(summary_scroll)
+	summary_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
+	summary_margin.add_child(summary_scroll)
 
 	summary_details_label = Label.new()
 	summary_details_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -245,44 +277,38 @@ func _build_ui() -> void:
 	GameState.style_label(status_label, 20, true)
 	actions.add_child(status_label)
 
-func _add_field_with_input(grid: GridContainer, label_text: String, profile_key: String) -> void:
+func _add_socket_field(grid: GridContainer, label_text: String, field_id: String, suffix_text: String = "") -> void:
 	var label := Label.new()
 	label.text = label_text
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	GameState.style_label(label, 22, false)
 	grid.add_child(label)
 
-	var input := LineEdit.new()
-	input.custom_minimum_size = Vector2(0, 48)
-	input.text = String(GameState.profile.get(profile_key, ""))
-	input.focus_entered.connect(_on_input_focused.bind(input))
-	grid.add_child(input)
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 8)
+	grid.add_child(row)
 
-func _add_grade_field(grid: GridContainer) -> LineEdit:
-	var label := Label.new()
-	label.text = "Grade:"
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	GameState.style_label(label, 22, false)
-	grid.add_child(label)
+	var slot_index := slot_field_by_index.size()
+	slot_field_by_index.append(field_id)
 
-	var grade_row := HBoxContainer.new()
-	grade_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	grade_row.add_theme_constant_override("separation", 8)
-	grid.add_child(grade_row)
+	var slot = DropSlotScript.new()
+	slot.custom_minimum_size = Vector2(0, 52)
+	slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slot.add_theme_stylebox_override("panel", _slot_style())
+	slot.configure(slot_index)
+	slot.sentence_dropped.connect(_on_slot_sentence_dropped)
+	slot.sentence_cleared.connect(_on_slot_sentence_cleared)
+	row.add_child(slot)
+	slot_nodes[field_id] = slot
+	slot_assignments[field_id] = ""
 
-	var input := LineEdit.new()
-	input.custom_minimum_size = Vector2(0, 48)
-	input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	input.focus_entered.connect(_on_input_focused.bind(input))
-	grade_row.add_child(input)
-
-	var suffix := Label.new()
-	suffix.text = "grade"
-	suffix.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	GameState.style_label(suffix, 20, false)
-	grade_row.add_child(suffix)
-
-	return input
+	if suffix_text != "":
+		var suffix := Label.new()
+		suffix.text = suffix_text
+		suffix.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		GameState.style_label(suffix, 20, false)
+		row.add_child(suffix)
 
 func _add_field_with_label(grid: GridContainer, label_text: String, value_text: String) -> void:
 	var label := Label.new()
@@ -300,44 +326,110 @@ func _add_field_with_label(grid: GridContainer, label_text: String, value_text: 
 func _show_form_state() -> void:
 	finished = false
 	content_row.visible = true
-	card_panel.visible = true
-	bank_panel.visible = true
 	check_button.visible = true
 	check_button.disabled = false
 	continue_button.visible = false
 	repeat_button.visible = false
 	status_label.visible = false
+	feedback_panel.visible = false
 	feedback_label.text = ""
-	summary_scroll.visible = false
+	summary_panel.visible = false
 	summary_details_label.text = ""
-	instruction_label.text = "Write your information.  Use simple English.  Check your spelling."
+	instruction_label.text = "Drag the correct blocks to complete your profile."
+
+	for field_id in slot_field_by_index:
+		slot_assignments[field_id] = ""
+
 	_rebuild_word_bank()
+	_render_slots()
+	_render_bank()
 
-	if name_input != null:
-		name_input.editable = true
-		name_input.text = ""
-	if last_name_input != null:
-		last_name_input.editable = true
-		last_name_input.text = ""
-	if age_input != null:
-		age_input.editable = true
-		age_input.text = ""
-	if grade_input != null:
-		grade_input.editable = true
-		grade_input.text = ""
-	if province_input != null:
-		province_input.editable = true
-		province_input.text = ""
-
-func _on_input_focused(input: LineEdit) -> void:
-	active_input = input
-
-func _on_word_bank_pressed(word: String) -> void:
+func _on_slot_sentence_dropped(slot_index: int, sentence_id: String) -> void:
 	if finished:
 		return
-	if active_input == null:
+	if sentence_id == "" or not token_text_by_id.has(sentence_id):
 		return
-	active_input.text = word
+	if slot_index < 0 or slot_index >= slot_field_by_index.size():
+		return
+
+	var field_id := slot_field_by_index[slot_index]
+	var existing := String(slot_assignments.get(field_id, ""))
+	if existing != "":
+		_add_to_bank(existing)
+
+	for other_field_variant in slot_assignments.keys():
+		var other_field := String(other_field_variant)
+		if String(slot_assignments[other_field]) == sentence_id:
+			slot_assignments[other_field] = ""
+
+	_remove_from_bank(sentence_id)
+	slot_assignments[field_id] = sentence_id
+
+	_render_slots()
+	_render_bank()
+
+func _on_slot_sentence_cleared(slot_index: int) -> void:
+	if finished:
+		return
+	if slot_index < 0 or slot_index >= slot_field_by_index.size():
+		return
+
+	var field_id := slot_field_by_index[slot_index]
+	var existing := String(slot_assignments.get(field_id, ""))
+	if existing == "":
+		return
+
+	slot_assignments[field_id] = ""
+	_add_to_bank(existing)
+	_render_slots()
+	_render_bank()
+
+func _on_bank_sentence_returned(sentence_id: String) -> void:
+	if finished:
+		return
+	if sentence_id == "":
+		return
+
+	for field_id_variant in slot_assignments.keys():
+		var field_id := String(field_id_variant)
+		if String(slot_assignments[field_id]) == sentence_id:
+			slot_assignments[field_id] = ""
+			_add_to_bank(sentence_id)
+			break
+	_render_slots()
+	_render_bank()
+
+func _render_slots() -> void:
+	for field_id_variant in slot_field_by_index:
+		var field_id := String(field_id_variant)
+		if not slot_nodes.has(field_id):
+			continue
+		var slot = slot_nodes[field_id]
+		slot.set_locked(finished)
+		var sentence_id := String(slot_assignments.get(field_id, ""))
+		if sentence_id != "" and token_text_by_id.has(sentence_id):
+			slot.set_sentence(sentence_id, String(token_text_by_id[sentence_id]))
+		else:
+			slot.clear_sentence()
+
+func _render_bank() -> void:
+	for child in bank_flow.get_children():
+		child.queue_free()
+	for sid_variant in bank_ids:
+		var sid := String(sid_variant)
+		if not token_text_by_id.has(sid):
+			continue
+		var chip = DragSentenceButtonScript.new()
+		chip.setup(sid, String(token_text_by_id[sid]))
+		chip.drag_enabled = not finished
+		chip.custom_minimum_size = Vector2(130, 40)
+		chip.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		chip.set_chip_style(_bank_chip_style())
+		if chip.has_method("set_label_style"):
+			chip.set_label_style(GameState.pretty_font, 20)
+		bank_flow.add_child(chip)
+	if bank_panel != null and bank_panel.has_method("set_locked"):
+		bank_panel.set_locked(finished)
 
 func _on_check_pressed() -> void:
 	if finished:
@@ -357,6 +449,10 @@ func _on_check_pressed() -> void:
 		GameState.save_progress()
 
 	var result := GameState.record_challenge_result(CHALLENGE_ID, 1 if passed else 0, 1, PASS_RATIO)
+	var details_text := _build_summary_details(evaluation, passed)
+	result["last_summary_details"] = details_text
+	GameState.challenge_results[CHALLENGE_ID] = result
+	GameState.save_progress()
 	if passed and bool(result.get("passed", false)):
 		GameState.update_zone_badge_from_requirements("my_school_card")
 	_show_summary(result, evaluation)
@@ -375,13 +471,12 @@ func _show_summary(result: Dictionary, evaluation: Dictionary) -> void:
 	var attempts := int(result.get("attempts", 0))
 
 	content_row.visible = false
-	card_panel.visible = false
-	bank_panel.visible = false
 	check_button.visible = false
 	continue_button.visible = true
 	repeat_button.visible = true
 	status_label.visible = true
-	summary_scroll.visible = true
+	feedback_panel.visible = true
+	summary_panel.visible = true
 
 	instruction_label.text = "Challenge Complete"
 	if passed:
@@ -394,7 +489,16 @@ func _show_summary(result: Dictionary, evaluation: Dictionary) -> void:
 		status_label.add_theme_color_override("font_color", Color(1.0, 0.72, 0.72))
 	if attempts > 1:
 		feedback_label.text += " Attempts: " + str(attempts)
-	summary_details_label.text = _build_summary_details(evaluation, passed)
+
+	var details_text := ""
+	if evaluation.is_empty() and result.has("last_summary_details"):
+		details_text = String(result.get("last_summary_details", ""))
+	if details_text == "":
+		details_text = _build_summary_details(evaluation, passed)
+	summary_details_label.text = details_text
+	summary_scroll.scroll_vertical = 0
+	_render_slots()
+	_render_bank()
 
 func _on_repeat_pressed() -> void:
 	_show_form_state()
@@ -421,70 +525,21 @@ func _change_scene_after_popup(scene_path: String, is_back: bool) -> void:
 func _clean(value: String) -> String:
 	return value.strip_edges()
 
-func _rebuild_word_bank() -> void:
-	if bank_flow == null:
-		return
-	for child in bank_flow.get_children():
-		child.queue_free()
-
-	var tokens: Array[String] = []
-	for grade_variant in VALID_GRADES:
-		tokens.append(String(grade_variant))
-	for province_variant in VALID_PROVINCES:
-		tokens.append(String(province_variant))
-
-	var profile_tokens := [
-		String(GameState.profile.get("name", "")),
-		String(GameState.profile.get("last_name", "")),
-		String(GameState.profile.get("age", ""))
-	]
-	for profile_token_variant in profile_tokens:
-		var profile_token := String(profile_token_variant).strip_edges()
-		if profile_token != "":
-			tokens.append(profile_token)
-
-	var unique_tokens: Array[String] = []
-	for token_variant in tokens:
-		var token := String(token_variant).strip_edges()
-		if token == "":
-			continue
-		if unique_tokens.find(token) < 0:
-			unique_tokens.append(token)
-
-	for token in unique_tokens:
-		var word_button := Button.new()
-		word_button.text = token
-		word_button.custom_minimum_size = Vector2(130, 40)
-		GameState.style_menu_button(word_button, "blue")
-		word_button.custom_minimum_size = Vector2(130, 40)
-		word_button.add_theme_font_size_override("font_size", 20)
-		word_button.pressed.connect(_on_word_bank_pressed.bind(token))
-		bank_flow.add_child(word_button)
-
-func _is_valid_grade(value: String) -> bool:
-	for grade_variant in VALID_GRADES:
-		if _equals_nocase(value, String(grade_variant)):
-			return true
-	return false
-
-func _is_valid_province(value: String) -> bool:
-	for province_variant in VALID_PROVINCES:
-		if _equals_nocase(value, String(province_variant)):
-			return true
-	return false
-
-func _equals_nocase(a: String, b: String) -> bool:
-	return a.strip_edges().to_lower() == b.strip_edges().to_lower()
+func _slot_text(field_id: String) -> String:
+	var sid := String(slot_assignments.get(field_id, ""))
+	if sid == "":
+		return ""
+	return _clean(String(token_text_by_id.get(sid, "")))
 
 func _evaluate_profile() -> Dictionary:
 	var issues: Array[String] = []
 	var values := {
-		"name": _clean(name_input.text),
-		"last_name": _clean(last_name_input.text),
-		"age": _clean(age_input.text),
-		"grade": _clean(grade_input.text),
+		"name": _slot_text("name"),
+		"last_name": _slot_text("last_name"),
+		"age": _slot_text("age"),
+		"grade": _slot_text("grade"),
 		"country": "Costa Rica",
-		"province": _clean(province_input.text)
+		"province": _slot_text("province")
 	}
 
 	if String(values["name"]) == "":
@@ -556,3 +611,112 @@ func _build_summary_details(evaluation: Dictionary, passed: bool) -> String:
 			summary += "\n- " + String(issue_variant)
 
 	return summary
+
+func _rebuild_word_bank() -> void:
+	token_text_by_id.clear()
+	bank_ids.clear()
+
+	var tokens: Array[String] = []
+	for grade_variant in VALID_GRADES:
+		tokens.append(String(grade_variant))
+	for province_variant in VALID_PROVINCES:
+		tokens.append(String(province_variant))
+
+	var profile_tokens := [
+		String(GameState.profile.get("name", "")),
+		String(GameState.profile.get("last_name", "")),
+		String(GameState.profile.get("age", ""))
+	]
+	for profile_token_variant in profile_tokens:
+		var profile_token := String(profile_token_variant).strip_edges()
+		if profile_token != "":
+			tokens.append(profile_token)
+
+	var unique_tokens: Array[String] = []
+	for token_variant in tokens:
+		var token := String(token_variant).strip_edges()
+		if token == "":
+			continue
+		if unique_tokens.find(token) < 0:
+			unique_tokens.append(token)
+
+	var idx := 0
+	for token in unique_tokens:
+		var sid := "t" + str(idx)
+		idx += 1
+		token_text_by_id[sid] = token
+		bank_ids.append(sid)
+
+func _add_to_bank(sentence_id: String) -> void:
+	if sentence_id == "":
+		return
+	if bank_ids.find(sentence_id) < 0:
+		bank_ids.append(sentence_id)
+
+func _remove_from_bank(sentence_id: String) -> void:
+	var idx := bank_ids.find(sentence_id)
+	if idx >= 0:
+		bank_ids.remove_at(idx)
+
+func _is_valid_grade(value: String) -> bool:
+	for grade_variant in VALID_GRADES:
+		if _equals_nocase(value, String(grade_variant)):
+			return true
+	return false
+
+func _is_valid_province(value: String) -> bool:
+	for province_variant in VALID_PROVINCES:
+		if _equals_nocase(value, String(province_variant)):
+			return true
+	return false
+
+func _equals_nocase(a: String, b: String) -> bool:
+	return a.strip_edges().to_lower() == b.strip_edges().to_lower()
+
+func _panel_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.05, 0.09, 0.18, 0.84)
+	sb.border_color = Color(0.72, 0.86, 1.0, 0.92)
+	sb.set_border_width_all(2)
+	sb.corner_radius_top_left = 14
+	sb.corner_radius_top_right = 14
+	sb.corner_radius_bottom_right = 14
+	sb.corner_radius_bottom_left = 14
+	return sb
+
+func _slot_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.08, 0.12, 0.24, 0.9)
+	sb.border_color = Color(0.76, 0.88, 1.0, 0.9)
+	sb.set_border_width_all(2)
+	sb.corner_radius_top_left = 10
+	sb.corner_radius_top_right = 10
+	sb.corner_radius_bottom_right = 10
+	sb.corner_radius_bottom_left = 10
+	sb.set_content_margin_all(10)
+	return sb
+
+func _bank_chip_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.21, 0.55, 0.93, 0.97)
+	sb.border_color = Color(0.76, 0.92, 1.0, 0.98)
+	sb.set_border_width_all(3)
+	sb.corner_radius_top_left = 20
+	sb.corner_radius_top_right = 20
+	sb.corner_radius_bottom_right = 20
+	sb.corner_radius_bottom_left = 20
+	sb.shadow_color = Color(0, 0, 0, 0.22)
+	sb.shadow_size = 4
+	sb.shadow_offset = Vector2(0, 2)
+	return sb
+
+func _result_text_panel_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.06, 0.11, 0.22, 0.82)
+	sb.border_color = Color(0.74, 0.88, 1.0, 0.9)
+	sb.set_border_width_all(2)
+	sb.corner_radius_top_left = 12
+	sb.corner_radius_top_right = 12
+	sb.corner_radius_bottom_right = 12
+	sb.corner_radius_bottom_left = 12
+	return sb
