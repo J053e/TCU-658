@@ -3,28 +3,37 @@ extends Control
 const CHALLENGE_ID := "my_school_card_fill_profile"
 const PASS_RATIO := 0.70
 
-const BASE_WORD_BANK := [
-	"age",
-	"grade",
-	"country",
-	"province",
-	"seven",
-	"twelve",
-	"Costa Rica",
-	"Cartago",
-	"San Jos\u00e9",
+const VALID_PROVINCES := [
+	"San Jose",
 	"Heredia",
 	"Guanacaste",
 	"Puntarenas",
-	"Lim\u00f3n",
-	"Alajuela"
+	"Limon",
+	"Alajuela",
+	"Cartago"
+]
+
+const VALID_GRADES := [
+	"Sixth",
+	"Seventh",
+	"Eighth",
+	"Ninth",
+	"Tenth",
+	"Eleventh",
+	"Twelfth",
+	"Thirteenth",
+	"Fourteenth",
+	"Fifteenth"
 ]
 
 var title_label: Label
 var instruction_label: Label
 var feedback_label: Label
+var summary_details_label: Label
+var summary_scroll: ScrollContainer
 var card_panel: PanelContainer
 var bank_panel: PanelContainer
+var content_row: HBoxContainer
 var check_button: Button
 var continue_button: Button
 var back_button: Button
@@ -34,6 +43,7 @@ var status_label: Label
 var name_input: LineEdit
 var last_name_input: LineEdit
 var age_input: LineEdit
+var grade_input: LineEdit
 var province_input: LineEdit
 var bank_flow: FlowContainer
 
@@ -61,7 +71,7 @@ func _build_ui() -> void:
 	var root := VBoxContainer.new()
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_theme_constant_override("separation", 10)
+	root.add_theme_constant_override("separation", 8)
 	margin.add_child(root)
 
 	title_label = Label.new()
@@ -78,16 +88,18 @@ func _build_ui() -> void:
 	GameState.style_label(instruction_label, 22, false)
 	root.add_child(instruction_label)
 
-	var content := HBoxContainer.new()
-	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_theme_constant_override("separation", 12)
-	root.add_child(content)
+	content_row = HBoxContainer.new()
+	content_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content_row.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	content_row.custom_minimum_size = Vector2(0, 430)
+	content_row.add_theme_constant_override("separation", 12)
+	root.add_child(content_row)
 
 	card_panel = PanelContainer.new()
 	card_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_child(card_panel)
+	card_panel.custom_minimum_size = Vector2(0, 430)
+	content_row.add_child(card_panel)
 
 	var card_margin := MarginContainer.new()
 	card_margin.add_theme_constant_override("margin_left", 14)
@@ -122,7 +134,8 @@ func _build_ui() -> void:
 	_add_field_with_input(fields_grid, "Age:", "age")
 	age_input = fields_grid.get_child(fields_grid.get_child_count() - 1) as LineEdit
 
-	_add_field_with_label(fields_grid, "Grade:", "Seventh grade")
+	grade_input = _add_grade_field(fields_grid)
+
 	_add_field_with_label(fields_grid, "Country:", "Costa Rica")
 
 	_add_field_with_input(fields_grid, "Province:", "province")
@@ -131,8 +144,8 @@ func _build_ui() -> void:
 	bank_panel = PanelContainer.new()
 	bank_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bank_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	bank_panel.custom_minimum_size = Vector2(340, 0)
-	content.add_child(bank_panel)
+	bank_panel.custom_minimum_size = Vector2(340, 430)
+	content_row.add_child(bank_panel)
 
 	var bank_margin := MarginContainer.new()
 	bank_margin.add_theme_constant_override("margin_left", 10)
@@ -174,8 +187,28 @@ func _build_ui() -> void:
 	GameState.style_label(feedback_label, 20, true)
 	root.add_child(feedback_label)
 
+	summary_scroll = ScrollContainer.new()
+	summary_scroll.visible = false
+	summary_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	summary_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	summary_scroll.custom_minimum_size = Vector2(0, 220)
+	summary_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	summary_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	root.add_child(summary_scroll)
+
+	summary_details_label = Label.new()
+	summary_details_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	summary_details_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	summary_details_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	summary_details_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	summary_details_label.custom_minimum_size = Vector2(0, 220)
+	GameState.style_label(summary_details_label, 18, false)
+	summary_scroll.add_child(summary_details_label)
+
 	var actions := HBoxContainer.new()
 	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	actions.custom_minimum_size = Vector2(0, 56)
 	actions.alignment = BoxContainer.ALIGNMENT_CENTER
 	actions.add_theme_constant_override("separation", 10)
 	root.add_child(actions)
@@ -225,6 +258,32 @@ func _add_field_with_input(grid: GridContainer, label_text: String, profile_key:
 	input.focus_entered.connect(_on_input_focused.bind(input))
 	grid.add_child(input)
 
+func _add_grade_field(grid: GridContainer) -> LineEdit:
+	var label := Label.new()
+	label.text = "Grade:"
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	GameState.style_label(label, 22, false)
+	grid.add_child(label)
+
+	var grade_row := HBoxContainer.new()
+	grade_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grade_row.add_theme_constant_override("separation", 8)
+	grid.add_child(grade_row)
+
+	var input := LineEdit.new()
+	input.custom_minimum_size = Vector2(0, 48)
+	input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	input.focus_entered.connect(_on_input_focused.bind(input))
+	grade_row.add_child(input)
+
+	var suffix := Label.new()
+	suffix.text = "grade"
+	suffix.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	GameState.style_label(suffix, 20, false)
+	grade_row.add_child(suffix)
+
+	return input
+
 func _add_field_with_label(grid: GridContainer, label_text: String, value_text: String) -> void:
 	var label := Label.new()
 	label.text = label_text
@@ -240,6 +299,7 @@ func _add_field_with_label(grid: GridContainer, label_text: String, value_text: 
 
 func _show_form_state() -> void:
 	finished = false
+	content_row.visible = true
 	card_panel.visible = true
 	bank_panel.visible = true
 	check_button.visible = true
@@ -248,21 +308,26 @@ func _show_form_state() -> void:
 	repeat_button.visible = false
 	status_label.visible = false
 	feedback_label.text = ""
+	summary_scroll.visible = false
+	summary_details_label.text = ""
 	instruction_label.text = "Write your information.  Use simple English.  Check your spelling."
 	_rebuild_word_bank()
 
 	if name_input != null:
 		name_input.editable = true
-		name_input.text = String(GameState.profile.get("name", ""))
+		name_input.text = ""
 	if last_name_input != null:
 		last_name_input.editable = true
-		last_name_input.text = String(GameState.profile.get("last_name", ""))
+		last_name_input.text = ""
 	if age_input != null:
 		age_input.editable = true
-		age_input.text = String(GameState.profile.get("age", ""))
+		age_input.text = ""
+	if grade_input != null:
+		grade_input.editable = true
+		grade_input.text = ""
 	if province_input != null:
 		province_input.editable = true
-		province_input.text = String(GameState.profile.get("province", ""))
+		province_input.text = ""
 
 func _on_input_focused(input: LineEdit) -> void:
 	active_input = input
@@ -271,56 +336,52 @@ func _on_word_bank_pressed(word: String) -> void:
 	if finished:
 		return
 	if active_input == null:
-		feedback_label.text = "Select a field first."
 		return
 	active_input.text = word
-	feedback_label.text = ""
 
 func _on_check_pressed() -> void:
 	if finished:
 		return
+	var evaluation := _evaluate_profile()
+	var issues: Array = evaluation.get("issues", [])
+	var passed := issues.is_empty()
 
-	var name_ok := _clean(name_input.text) != ""
-	var last_name_ok := _clean(last_name_input.text) != ""
-	var age_ok := _clean(age_input.text) != ""
-	var province_ok := _clean(province_input.text) != ""
+	if passed:
+		var values: Dictionary = evaluation.get("values", {})
+		GameState.profile["name"] = String(values.get("name", ""))
+		GameState.profile["last_name"] = String(values.get("last_name", ""))
+		GameState.profile["age"] = String(values.get("age", ""))
+		GameState.profile["grade"] = String(values.get("grade", ""))
+		GameState.profile["country"] = "Costa Rica"
+		GameState.profile["province"] = String(values.get("province", ""))
+		GameState.save_progress()
 
-	if not (name_ok and last_name_ok and age_ok and province_ok):
-		feedback_label.text = "Please complete all the spaces."
-		return
-
-	GameState.profile["name"] = _clean(name_input.text)
-	GameState.profile["last_name"] = _clean(last_name_input.text)
-	GameState.profile["age"] = _clean(age_input.text)
-	GameState.profile["grade"] = "seventh"
-	GameState.profile["country"] = "Costa Rica"
-	GameState.profile["province"] = _clean(province_input.text)
-	GameState.save_progress()
-
-	var result := GameState.record_challenge_result(CHALLENGE_ID, 1, 1, PASS_RATIO)
-	if bool(result.get("passed", false)):
+	var result := GameState.record_challenge_result(CHALLENGE_ID, 1 if passed else 0, 1, PASS_RATIO)
+	if passed and bool(result.get("passed", false)):
 		GameState.update_zone_badge_from_requirements("my_school_card")
-	_show_summary(result)
+	_show_summary(result, evaluation)
 
 func _show_saved_summary() -> void:
 	var result := GameState.get_challenge_result(CHALLENGE_ID)
 	if bool(result.get("passed", false)):
 		GameState.update_zone_badge_from_requirements("my_school_card")
-	_show_summary(result)
+	_show_summary(result, {})
 
-func _show_summary(result: Dictionary) -> void:
+func _show_summary(result: Dictionary, evaluation: Dictionary) -> void:
 	finished = true
 	var total := maxi(int(result.get("total_questions", 1)), 1)
 	var best_correct := clampi(int(result.get("best_correct", 0)), 0, total)
 	var passed := bool(result.get("passed", false))
 	var attempts := int(result.get("attempts", 0))
 
+	content_row.visible = false
 	card_panel.visible = false
 	bank_panel.visible = false
 	check_button.visible = false
 	continue_button.visible = true
 	repeat_button.visible = true
 	status_label.visible = true
+	summary_scroll.visible = true
 
 	instruction_label.text = "Challenge Complete"
 	if passed:
@@ -333,6 +394,7 @@ func _show_summary(result: Dictionary) -> void:
 		status_label.add_theme_color_override("font_color", Color(1.0, 0.72, 0.72))
 	if attempts > 1:
 		feedback_label.text += " Attempts: " + str(attempts)
+	summary_details_label.text = _build_summary_details(evaluation, passed)
 
 func _on_repeat_pressed() -> void:
 	_show_form_state()
@@ -366,8 +428,10 @@ func _rebuild_word_bank() -> void:
 		child.queue_free()
 
 	var tokens: Array[String] = []
-	for token_variant in BASE_WORD_BANK:
-		tokens.append(String(token_variant))
+	for grade_variant in VALID_GRADES:
+		tokens.append(String(grade_variant))
+	for province_variant in VALID_PROVINCES:
+		tokens.append(String(province_variant))
 
 	var profile_tokens := [
 		String(GameState.profile.get("name", "")),
@@ -396,3 +460,99 @@ func _rebuild_word_bank() -> void:
 		word_button.add_theme_font_size_override("font_size", 20)
 		word_button.pressed.connect(_on_word_bank_pressed.bind(token))
 		bank_flow.add_child(word_button)
+
+func _is_valid_grade(value: String) -> bool:
+	for grade_variant in VALID_GRADES:
+		if _equals_nocase(value, String(grade_variant)):
+			return true
+	return false
+
+func _is_valid_province(value: String) -> bool:
+	for province_variant in VALID_PROVINCES:
+		if _equals_nocase(value, String(province_variant)):
+			return true
+	return false
+
+func _equals_nocase(a: String, b: String) -> bool:
+	return a.strip_edges().to_lower() == b.strip_edges().to_lower()
+
+func _evaluate_profile() -> Dictionary:
+	var issues: Array[String] = []
+	var values := {
+		"name": _clean(name_input.text),
+		"last_name": _clean(last_name_input.text),
+		"age": _clean(age_input.text),
+		"grade": _clean(grade_input.text),
+		"country": "Costa Rica",
+		"province": _clean(province_input.text)
+	}
+
+	if String(values["name"]) == "":
+		issues.append("Name: missing value.")
+	if String(values["last_name"]) == "":
+		issues.append("Last name: missing value.")
+	if String(values["age"]) == "":
+		issues.append("Age: missing value.")
+	if String(values["grade"]) == "":
+		issues.append("Grade: missing value.")
+	if String(values["province"]) == "":
+		issues.append("Province: missing value.")
+
+	var expected_name := _clean(String(GameState.profile.get("name", "")))
+	var expected_last_name := _clean(String(GameState.profile.get("last_name", "")))
+	var expected_age := _clean(String(GameState.profile.get("age", "")))
+
+	if expected_name != "" and not _equals_nocase(String(values["name"]), expected_name):
+		issues.append("Name: must match your initial profile name.")
+	if expected_last_name != "" and not _equals_nocase(String(values["last_name"]), expected_last_name):
+		issues.append("Last name: must match your initial profile last name.")
+	if expected_age != "" and not _equals_nocase(String(values["age"]), expected_age):
+		issues.append("Age: must match your initial profile age.")
+	if String(values["age"]) != "" and not String(values["age"]).is_valid_int():
+		issues.append("Age: must be numeric.")
+	if String(values["grade"]) != "" and not _is_valid_grade(String(values["grade"])):
+		issues.append("Grade: choose one value from Sixth to Fifteenth.")
+	if String(values["province"]) != "" and not _is_valid_province(String(values["province"])):
+		issues.append("Province: choose a valid Costa Rica province.")
+
+	if _is_valid_grade(String(values["name"])) or _is_valid_grade(String(values["last_name"])):
+		issues.append("Name/Last name: cannot use grade values.")
+	if _is_valid_province(String(values["name"])) or _is_valid_province(String(values["last_name"])):
+		issues.append("Name/Last name: cannot use province values.")
+	if _equals_nocase(String(values["age"]), String(values["province"])) and String(values["age"]) != "":
+		issues.append("Age and Province: cannot be the same value.")
+
+	return {
+		"issues": issues,
+		"values": values
+	}
+
+func _build_summary_details(evaluation: Dictionary, passed: bool) -> String:
+	var values: Dictionary = evaluation.get("values", {})
+	if values.is_empty():
+		values = {
+			"name": String(GameState.profile.get("name", "")),
+			"last_name": String(GameState.profile.get("last_name", "")),
+			"age": String(GameState.profile.get("age", "")),
+			"grade": String(GameState.profile.get("grade", "")),
+			"country": "Costa Rica",
+			"province": String(GameState.profile.get("province", ""))
+		}
+
+	var summary := "My School Card Result:\n"
+	summary += "Name: " + String(values.get("name", "")) + "\n"
+	summary += "Last name: " + String(values.get("last_name", "")) + "\n"
+	summary += "Age: " + String(values.get("age", "")) + "\n"
+	summary += "Grade: " + String(values.get("grade", "")) + " grade\n"
+	summary += "Country: Costa Rica\n"
+	summary += "Province: " + String(values.get("province", ""))
+
+	var issues: Array = evaluation.get("issues", [])
+	if passed:
+		summary += "\n\nAll fields are valid."
+	elif not issues.is_empty():
+		summary += "\n\nFields to fix:"
+		for issue_variant in issues:
+			summary += "\n- " + String(issue_variant)
+
+	return summary
