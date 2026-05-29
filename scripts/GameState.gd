@@ -27,8 +27,9 @@ var profile := {
 	"age": "",
 	"grade": "seventh",
 	"country": "Costa Rica",
-	"town": ""
+	"province": ""
 }
+var profile_setup_done: bool = false
 var challenge_results: Dictionary = {}
 var pending_badge_popups: Dictionary = {}
 var ui_click_player: AudioStreamPlayer
@@ -127,12 +128,22 @@ func reset_progress() -> void:
 	challenge_results.clear()
 	pending_badge_popups.clear()
 	current_zone_id = ""
+	profile = {
+		"name": "",
+		"last_name": "",
+		"age": "",
+		"grade": "seventh",
+		"country": "Costa Rica",
+		"province": ""
+	}
+	profile_setup_done = false
 	save_progress()
 
 func save_progress() -> void:
 	var payload := {
 		"stamps": stamps,
 		"profile": profile,
+		"profile_setup_done": profile_setup_done,
 		"challenge_results": challenge_results,
 		"pending_badge_popups": pending_badge_popups
 	}
@@ -163,6 +174,11 @@ func load_progress() -> void:
 		for key in payload_dict["profile"].keys():
 			if profile.has(key):
 				profile[key] = payload_dict["profile"][key]
+		# Backward compatibility for older saves that used "town".
+		if String(profile.get("province", "")).strip_edges() == "" and payload_dict["profile"].has("town"):
+			profile["province"] = String(payload_dict["profile"]["town"])
+	if payload_dict.has("profile_setup_done"):
+		profile_setup_done = bool(payload_dict["profile_setup_done"])
 	if payload_dict.has("challenge_results") and typeof(payload_dict["challenge_results"]) == TYPE_DICTIONARY:
 		challenge_results = payload_dict["challenge_results"].duplicate(true)
 	if payload_dict.has("pending_badge_popups") and typeof(payload_dict["pending_badge_popups"]) == TYPE_DICTIONARY:

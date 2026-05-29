@@ -4,6 +4,13 @@ var final_screen_button: Button
 var zone_buttons := {}
 var badge_slots := {}
 var badge_gray_material: ShaderMaterial
+var profile_setup_layer: CanvasLayer
+var profile_setup_dim: ColorRect
+var profile_setup_panel: PanelContainer
+var profile_name_input: LineEdit
+var profile_last_name_input: LineEdit
+var profile_age_select: OptionButton
+var profile_save_button: Button
 const WORLD_MAP_BG_PATH := "res://assets/ui/backgrounds/world_map_bg.png"
 const ZONE_ORDER := [
 	"school_gate",
@@ -24,6 +31,7 @@ func _ready() -> void:
 	_build_ui()
 	GameState.load_progress()
 	_refresh()
+	_maybe_show_profile_setup_dialog()
 	GameState.play_enter_transition(self)
 
 func _build_ui() -> void:
@@ -167,3 +175,150 @@ func _on_FinalScreenButton_pressed() -> void:
 
 func _on_BackButton_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/MainMenu.tscn", true)
+
+func _maybe_show_profile_setup_dialog() -> void:
+	if GameState.profile_setup_done:
+		return
+	_build_profile_setup_dialog()
+	_show_profile_setup_modal()
+	_validate_profile_setup_inputs()
+
+func _build_profile_setup_dialog() -> void:
+	if profile_setup_layer != null:
+		return
+	profile_setup_layer = CanvasLayer.new()
+	profile_setup_layer.layer = 220
+	add_child(profile_setup_layer)
+
+	profile_setup_dim = ColorRect.new()
+	profile_setup_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	profile_setup_dim.color = Color(0, 0, 0, 0.45)
+	profile_setup_dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	profile_setup_layer.add_child(profile_setup_dim)
+
+	var modal_margin := MarginContainer.new()
+	modal_margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Shift a bit down so it looks visually centered with branding at top.
+	modal_margin.add_theme_constant_override("margin_top", 32)
+	profile_setup_layer.add_child(modal_margin)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_STOP
+	modal_margin.add_child(center)
+
+	profile_setup_panel = PanelContainer.new()
+	profile_setup_panel.custom_minimum_size = Vector2(520, 350)
+	profile_setup_panel.add_theme_stylebox_override("panel", _profile_modal_style())
+	center.add_child(profile_setup_panel)
+
+	var panel_margin := MarginContainer.new()
+	panel_margin.custom_minimum_size = Vector2(480, 260)
+	panel_margin.add_theme_constant_override("margin_left", 12)
+	panel_margin.add_theme_constant_override("margin_top", 10)
+	panel_margin.add_theme_constant_override("margin_right", 12)
+	panel_margin.add_theme_constant_override("margin_bottom", 10)
+	profile_setup_panel.add_child(panel_margin)
+
+	var form := VBoxContainer.new()
+	form.add_theme_constant_override("separation", 8)
+	panel_margin.add_child(form)
+
+	var title := Label.new()
+	title.text = "Set Your Student Profile"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	GameState.style_label(title, 26, true)
+	form.add_child(title)
+
+	var helper := Label.new()
+	helper.text = "Enter your name and last name, then select your age."
+	helper.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	GameState.style_label(helper, 20, false)
+	form.add_child(helper)
+
+	form.add_child(_make_form_label("Name"))
+	profile_name_input = LineEdit.new()
+	profile_name_input.text = String(GameState.profile.get("name", ""))
+	profile_name_input.text_changed.connect(_validate_profile_setup_inputs)
+	form.add_child(profile_name_input)
+
+	form.add_child(_make_form_label("Last name"))
+	profile_last_name_input = LineEdit.new()
+	profile_last_name_input.text = String(GameState.profile.get("last_name", ""))
+	profile_last_name_input.text_changed.connect(_validate_profile_setup_inputs)
+	form.add_child(profile_last_name_input)
+
+	form.add_child(_make_form_label("Age"))
+	profile_age_select = OptionButton.new()
+	profile_age_select.add_item("Select age")
+	for age in range(10, 19):
+		profile_age_select.add_item(str(age))
+	var saved_age := String(GameState.profile.get("age", "")).strip_edges()
+	if saved_age != "":
+		for i in range(1, profile_age_select.item_count):
+			if profile_age_select.get_item_text(i) == saved_age:
+				profile_age_select.select(i)
+				break
+	profile_age_select.item_selected.connect(_validate_profile_setup_inputs)
+	form.add_child(profile_age_select)
+
+	profile_save_button = Button.new()
+	profile_save_button.text = "Save"
+	profile_save_button.custom_minimum_size = Vector2(220, 58)
+	profile_save_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	GameState.style_menu_button(profile_save_button, "green")
+	profile_save_button.pressed.connect(_on_profile_setup_confirmed)
+	form.add_child(profile_save_button)
+
+func _make_form_label(text_value: String) -> Label:
+	var label := Label.new()
+	label.text = text_value
+	GameState.style_label(label, 18, false)
+	return label
+
+func _validate_profile_setup_inputs(_unused: Variant = null) -> void:
+	if profile_setup_layer == null:
+		return
+	var name_ok := profile_name_input != null and profile_name_input.text.strip_edges() != ""
+	var last_ok := profile_last_name_input != null and profile_last_name_input.text.strip_edges() != ""
+	var age_ok := profile_age_select != null and profile_age_select.selected > 0
+	var form_ok := name_ok and last_ok and age_ok
+	if profile_save_button != null:
+		profile_save_button.disabled = not form_ok
+
+func _on_profile_setup_confirmed() -> void:
+	var name_value := profile_name_input.text.strip_edges()
+	var last_name_value := profile_last_name_input.text.strip_edges()
+	var age_value := ""
+	if profile_age_select.selected > 0:
+		age_value = profile_age_select.get_item_text(profile_age_select.selected).strip_edges()
+
+	if name_value == "" or last_name_value == "" or age_value == "":
+		_validate_profile_setup_inputs()
+		return
+
+	GameState.profile["name"] = name_value
+	GameState.profile["last_name"] = last_name_value
+	GameState.profile["age"] = age_value
+	GameState.profile_setup_done = true
+	GameState.save_progress()
+	_hide_profile_setup_modal()
+
+func _show_profile_setup_modal() -> void:
+	if profile_setup_layer != null:
+		profile_setup_layer.visible = true
+
+func _hide_profile_setup_modal() -> void:
+	if profile_setup_layer != null:
+		profile_setup_layer.visible = false
+
+func _profile_modal_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.20, 0.22, 0.26, 0.98)
+	sb.border_color = Color(0.72, 0.86, 1.0, 0.88)
+	sb.set_border_width_all(2)
+	sb.corner_radius_top_left = 10
+	sb.corner_radius_top_right = 10
+	sb.corner_radius_bottom_right = 10
+	sb.corner_radius_bottom_left = 10
+	return sb
