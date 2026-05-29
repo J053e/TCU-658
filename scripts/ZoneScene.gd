@@ -378,7 +378,7 @@ func _on_MySchoolCardProfile_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/MySchoolCardFillProfilePlaceholder.tscn")
 
 func _on_MySchoolCardLabel_pressed() -> void:
-	_show_not_implemented_notice("Label the Classroom")
+	GameState.change_scene_with_transition("res://scenes/MySchoolCardLabelClassroom.tscn")
 
 func _on_MySchoolCardSentences_pressed() -> void:
 	_show_not_implemented_notice("Simple Personal Sentences")
