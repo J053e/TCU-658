@@ -26,7 +26,7 @@
       "minigames": {
         "fill_profile": "res://assets/zones/zone_04_my_school_card/backgrounds/minigames/fill_profile.png",
         "label_classroom": "res://assets/zones/zone_04_my_school_card/backgrounds/minigames/label_classroom.png",
-        "personal_sentences": "res://assets/zones/zone_04_my_school_card/backgrounds/minigames/personal_sentences.png"
+        "personal_sentences": "res://assets/zones/zone_04_my_school_card/backgrounds/minigames/simple_personal_sentences.png"
       }
     },
     "final_passport": {

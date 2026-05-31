@@ -3,13 +3,15 @@ extends Control
 const DATA_PATH := "res://data/my_school_card_personal_sentences.json"
 const CHALLENGE_ID := "my_school_card_personal_sentences"
 const PASS_RATIO := 0.70
-const BACKGROUND_PATH := "res://assets/zones/zone_04_my_school_card/backgrounds/minigames/personal_sentences.png"
+const BACKGROUND_PATH := "res://assets/zones/zone_04_my_school_card/backgrounds/minigames/simple_personal_sentences.png"
 
 var title_label: Label
 var progress_label: Label
 var sentence_label: Label
 var instruction_label: Label
 var feedback_label: Label
+var header_spacer: Control
+var options_box: VBoxContainer
 var option_buttons: Array[Button] = []
 var continue_button: Button
 var back_button: Button
@@ -49,6 +51,10 @@ func _build_ui() -> void:
 	root.add_theme_constant_override("separation", 10)
 	margin.add_child(root)
 
+	header_spacer = Control.new()
+	header_spacer.custom_minimum_size = Vector2(0, 0)
+	root.add_child(header_spacer)
+
 	title_label = Label.new()
 	title_label.text = "Simple Personal Sentences"
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -64,7 +70,7 @@ func _build_ui() -> void:
 	instruction_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	instruction_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	instruction_label.custom_minimum_size = Vector2(0, 54)
-	GameState.style_label(instruction_label, 22, false)
+	GameState.style_label(instruction_label, 22, true)
 	root.add_child(instruction_label)
 
 	sentence_label = Label.new()
@@ -75,7 +81,7 @@ func _build_ui() -> void:
 	GameState.style_label(sentence_label, 34, true)
 	root.add_child(sentence_label)
 
-	var options_box := VBoxContainer.new()
+	options_box = VBoxContainer.new()
 	options_box.add_theme_constant_override("separation", 8)
 	root.add_child(options_box)
 
@@ -149,11 +155,18 @@ func _start_new_attempt() -> void:
 	correct_total = 0
 	answered_current = false
 	challenge_finished = false
+	header_spacer.custom_minimum_size = Vector2(0, 0)
+	progress_label.add_theme_font_size_override("font_size", 24)
 	continue_button.text = "Continue"
 	continue_button.visible = true
 	continue_button.disabled = true
 	repeat_button.visible = false
+	back_button.visible = true
 	status_label.visible = false
+	options_box.visible = true
+	sentence_label.custom_minimum_size = Vector2(0, 96)
+	feedback_label.custom_minimum_size = Vector2(0, 54)
+	feedback_label.add_theme_font_size_override("font_size", 20)
 	feedback_label.text = ""
 	layout_spacer.custom_minimum_size = Vector2(0, 8)
 	_show_current_question()
@@ -264,7 +277,9 @@ func _show_summary(result: Dictionary) -> void:
 	var attempts := int(result.get("attempts", 0))
 
 	challenge_finished = true
+	header_spacer.custom_minimum_size = Vector2(0, 42)
 	progress_label.text = "Challenge Complete"
+	progress_label.add_theme_font_size_override("font_size", 26)
 	if passed:
 		instruction_label.text = "Good work. Your personal sentences are clear."
 		feedback_label.text = "Best score: " + str(best_correct) + "/" + str(total)
@@ -279,6 +294,10 @@ func _show_summary(result: Dictionary) -> void:
 		feedback_label.text += " Attempts: " + str(attempts)
 
 	sentence_label.text = "Complete the sentences with the correct option."
+	sentence_label.custom_minimum_size = Vector2(0, 112)
+	feedback_label.custom_minimum_size = Vector2(0, 64)
+	feedback_label.add_theme_font_size_override("font_size", 22)
+	options_box.visible = false
 	for btn in option_buttons:
 		btn.visible = false
 	continue_button.visible = true
@@ -286,7 +305,7 @@ func _show_summary(result: Dictionary) -> void:
 	continue_button.disabled = false
 	repeat_button.visible = true
 	status_label.visible = true
-	layout_spacer.custom_minimum_size = Vector2(0, 92)
+	layout_spacer.custom_minimum_size = Vector2(0, 78)
 
 func _on_repeat_pressed() -> void:
 	_start_new_attempt()
