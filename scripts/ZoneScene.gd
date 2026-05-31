@@ -381,7 +381,7 @@ func _on_MySchoolCardLabel_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/MySchoolCardLabelClassroom.tscn")
 
 func _on_MySchoolCardSentences_pressed() -> void:
-	_show_not_implemented_notice("Simple Personal Sentences")
+	GameState.change_scene_with_transition("res://scenes/MySchoolCardPersonalSentences.tscn")
 
 func _description_panel_style() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()

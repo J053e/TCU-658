@@ -1,0 +1,39 @@
+{
+  "zone_id": "my_school_card",
+  "title": "Simple Personal Sentences",
+  "instruction": "Complete the sentences with the correct option.",
+  "questions": [
+    {
+      "id": "ps01",
+      "sentence": "My name is ________.",
+      "options": ["[NAME]", "Goodbye", "Please"],
+      "correct_index": 0,
+      "correct_feedback": "Great!",
+      "incorrect_feedback": "Check the sentence and try again."
+    },
+    {
+      "id": "ps02",
+      "sentence": "I am ________ years old.",
+      "options": ["[AGE]", "window", "sorry"],
+      "correct_index": 0,
+      "correct_feedback": "Nice!",
+      "incorrect_feedback": "Use the age option."
+    },
+    {
+      "id": "ps03",
+      "sentence": "I live in ________.",
+      "options": ["[TOWN]", "desk", "good night"],
+      "correct_index": 0,
+      "correct_feedback": "Correct!",
+      "incorrect_feedback": "Choose the place where you live."
+    },
+    {
+      "id": "ps04",
+      "sentence": "I am in ________ grade.",
+      "options": ["seventh", "thank you", "board"],
+      "correct_index": 0,
+      "correct_feedback": "Excellent!",
+      "incorrect_feedback": "Pick the school grade."
+    }
+  ]
+}

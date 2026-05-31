@@ -230,7 +230,7 @@ func _on_check_pressed() -> void:
 		feedback_label.text = "Correct!"
 		feedback_label.add_theme_color_override("font_color", Color(0.78, 1.0, 0.76))
 	else:
-		feedback_label.text = "Incorrect. Correct label: " + String(current.get("answer", ""))
+		feedback_label.text = "Incorrect. Try again in the next one."
 		feedback_label.add_theme_color_override("font_color", Color(1.0, 0.76, 0.76))
 
 	answer_input.editable = false
