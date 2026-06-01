@@ -99,14 +99,15 @@ func _build_ui() -> void:
 	drag_hint_panel = PanelContainer.new()
 	drag_hint_panel.visible = false
 	drag_hint_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	drag_hint_panel.z_index = 20
 	drag_hint_panel.anchor_left = 0.5
 	drag_hint_panel.anchor_right = 0.5
 	drag_hint_panel.anchor_top = 0.0
 	drag_hint_panel.anchor_bottom = 0.0
 	drag_hint_panel.offset_left = -28
 	drag_hint_panel.offset_right = 28
-	drag_hint_panel.offset_top = -24
-	drag_hint_panel.offset_bottom = -4
+	drag_hint_panel.offset_top = -22
+	drag_hint_panel.offset_bottom = 0
 	drag_hint_panel.add_theme_stylebox_override("panel", _drag_hint_style())
 	add_child(drag_hint_panel)
 

@@ -32,7 +32,7 @@
     "final_passport": {
       "zone_screen": "res://assets/zones/zone_05_final_passport/backgrounds/zone_screen.png",
       "minigames": {
-        "build_intro": "res://assets/zones/zone_05_final_passport/backgrounds/minigames/build_intro.png",
+        "build_intro": "res://assets/zones/zone_05_final_passport/backgrounds/minigames/build_your_intro.png",
         "read_passport": "res://assets/zones/zone_05_final_passport/backgrounds/minigames/read_passport.png"
       }
     }
