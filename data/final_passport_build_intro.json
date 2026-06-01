@@ -47,11 +47,6 @@
       "kind": "main"
     },
     {
-      "id": "nice",
-      "text": "Nice to meet you.",
-      "kind": "main"
-    },
-    {
       "id": "bye",
       "text": "Bye!",
       "kind": "main"

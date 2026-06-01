@@ -15,7 +15,8 @@ const ZONE_BADGE_PATHS := {
 const ZONE_CHALLENGE_REQUIREMENTS := {
 	"classroom_survival": ["classroom_read_listen_click", "classroom_language"],
 	"meet_classmates": ["meet_order_dialogue", "meet_choose_question", "meet_politeness_fix"],
-	"my_school_card": ["my_school_card_fill_profile", "my_school_card_label_classroom", "my_school_card_personal_sentences"]
+	"my_school_card": ["my_school_card_fill_profile", "my_school_card_label_classroom", "my_school_card_personal_sentences"],
+	"final_passport": ["final_passport_build_intro", "final_passport_read_passport"]
 }
 
 var content := {}

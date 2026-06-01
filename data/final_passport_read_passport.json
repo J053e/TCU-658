@@ -1,0 +1,48 @@
+{
+  "title": "My English Passport",
+  "instruction": "Listen to the question audio and choose the correct passport line. The question is audio-only.",
+  "answers": [
+    { "id": "name_line", "text": "My name is [NAME] [LAST_NAME]." },
+    { "id": "age_line", "text": "I am [AGE] years old." },
+    { "id": "country_line", "text": "I am from [COUNTRY]." },
+    { "id": "town_line", "text": "I live in [TOWN]." },
+    { "id": "grade_line", "text": "I am in seventh grade." }
+  ],
+  "questions": [
+    {
+      "prompt": "What is your name?",
+      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport/question_01_name.ogg",
+      "answer_id": "name_line",
+      "correct_feedback": "Correct!",
+      "incorrect_feedback": "Incorrect. Listen again and choose the matching passport line."
+    },
+    {
+      "prompt": "How old are you?",
+      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport/question_02_age.ogg",
+      "answer_id": "age_line",
+      "correct_feedback": "Correct!",
+      "incorrect_feedback": "Incorrect. Listen again and choose the matching passport line."
+    },
+    {
+      "prompt": "Where are you from?",
+      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport/question_03_country.ogg",
+      "answer_id": "country_line",
+      "correct_feedback": "Correct!",
+      "incorrect_feedback": "Incorrect. Listen again and choose the matching passport line."
+    },
+    {
+      "prompt": "Where do you live?",
+      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport/question_04_town.ogg",
+      "answer_id": "town_line",
+      "correct_feedback": "Correct!",
+      "incorrect_feedback": "Incorrect. Listen again and choose the matching passport line."
+    },
+    {
+      "prompt": "What grade are you in?",
+      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport/question_05_grade.ogg",
+      "answer_id": "grade_line",
+      "correct_feedback": "Correct!",
+      "incorrect_feedback": "Incorrect. Listen again and choose the matching passport line."
+    }
+  ]
+}

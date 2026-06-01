@@ -509,17 +509,25 @@ func _update_check_availability() -> void:
 		check_button.disabled = true
 		return
 	var ready := true
+	var has_country_block := false
+	var has_town_block := false
 	for i in range(slot_assignments.size()):
 		var sid := String(slot_assignments[i])
 		if sid == "":
 			ready = false
 			break
+		if sid == "country":
+			has_country_block = true
+		elif sid == "province":
+			has_town_block = true
 		var req := String(requires_input_by_id.get(sid, ""))
 		if req != "":
 			var req_value := String(slot_custom_values.get(_slot_req_key(i), "")).strip_edges()
 			if req_value == "":
 				ready = false
 				break
+	if ready and (not has_country_block or not has_town_block):
+		ready = false
 	check_button.disabled = not ready
 	progress_label.text = "Intro Slots " + str(_filled_slots_count()) + "/" + str(total_slots)
 
@@ -534,7 +542,7 @@ func _on_check_pressed() -> void:
 	if answered_current or finished:
 		return
 	if check_button.disabled:
-		feedback_label.text = "Complete all slots and required country/province fields first."
+		feedback_label.text = "Complete all 7 slots and include both country and town before checking."
 		return
 
 	answered_current = true
@@ -550,6 +558,13 @@ func _on_check_pressed() -> void:
 	last_issue_summary = attempt_summary
 
 	var result := GameState.record_challenge_result(CHALLENGE_ID, score, total_slots, pass_ratio)
+	var selected_country := _extract_required_value_for_block("country")
+	var selected_town := _extract_required_value_for_block("province")
+	result["passport_country"] = selected_country if selected_country != "" else _profile_country()
+	result["passport_town"] = selected_town if selected_town != "" else _profile_province()
+	result["passport_name"] = String(GameState.profile.get("name", "")).strip_edges()
+	result["passport_last_name"] = String(GameState.profile.get("last_name", "")).strip_edges()
+	result["passport_age"] = String(GameState.profile.get("age", "")).strip_edges()
 	result["last_attempt_summary"] = attempt_summary
 	result["last_attempt_passed"] = passed_now
 	result["last_attempt_score"] = score
@@ -720,6 +735,13 @@ func _push_unique_issue(issues: Array[String], keys: Dictionary, key: String, me
 		return
 	keys[key] = true
 	issues.append(message)
+
+func _extract_required_value_for_block(block_id: String) -> String:
+	for i in range(slot_assignments.size()):
+		if String(slot_assignments[i]) != block_id:
+			continue
+		return String(slot_custom_values.get(_slot_req_key(i), "")).strip_edges()
+	return ""
 
 func _on_back_pressed() -> void:
 	if finished:

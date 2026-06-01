@@ -220,7 +220,7 @@ func _build_ui() -> void:
 	final_passport_challenges_box.add_child(final_passport_build_intro_button)
 
 	final_passport_read_button = Button.new()
-	final_passport_read_button.text = "Read the Final Passport"
+	final_passport_read_button.text = "Listen the Final Passport"
 	final_passport_read_button.custom_minimum_size = Vector2(520, 76)
 	final_passport_read_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	GameState.style_menu_button(final_passport_read_button, "purple")
@@ -412,6 +412,14 @@ func _show_not_implemented_notice(challenge_name: String) -> void:
 	add_child(dialog)
 	dialog.popup_centered()
 
+func _show_requirement_notice(message: String) -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "Challenge Locked"
+	dialog.dialog_text = message
+	dialog.ok_button_text = "OK"
+	add_child(dialog)
+	dialog.popup_centered()
+
 func _on_MeetDialogue_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/MeetOrderDialogue.tscn")
 
@@ -434,7 +442,11 @@ func _on_FinalPassportBuildIntro_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/FinalPassportBuildIntro.tscn")
 
 func _on_FinalPassportRead_pressed() -> void:
-	_show_not_implemented_notice("Read the Final Passport")
+	var prereq := GameState.get_challenge_result("final_passport_build_intro")
+	if prereq.is_empty() or not bool(prereq.get("passed", false)):
+		_show_requirement_notice("You must pass Build Your Intro first.")
+		return
+	GameState.change_scene_with_transition("res://scenes/FinalPassportReadPassport.tscn")
 
 func _description_panel_style() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
