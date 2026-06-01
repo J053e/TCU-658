@@ -18,6 +18,9 @@ var my_school_card_challenges_box: VBoxContainer
 var my_school_card_profile_button: Button
 var my_school_card_label_button: Button
 var my_school_card_sentences_button: Button
+var final_passport_challenges_box: VBoxContainer
+var final_passport_build_intro_button: Button
+var final_passport_read_button: Button
 var top_spacer: Control
 var status_panel: PanelContainer
 var status_label: Label
@@ -201,6 +204,29 @@ func _build_ui() -> void:
 	my_school_card_sentences_button.pressed.connect(_on_MySchoolCardSentences_pressed)
 	my_school_card_challenges_box.add_child(my_school_card_sentences_button)
 
+	final_passport_challenges_box = VBoxContainer.new()
+	final_passport_challenges_box.visible = false
+	final_passport_challenges_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	final_passport_challenges_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	final_passport_challenges_box.add_theme_constant_override("separation", 12)
+	root_vbox.add_child(final_passport_challenges_box)
+
+	final_passport_build_intro_button = Button.new()
+	final_passport_build_intro_button.text = "Build Your Intro"
+	final_passport_build_intro_button.custom_minimum_size = Vector2(520, 76)
+	final_passport_build_intro_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	GameState.style_menu_button(final_passport_build_intro_button, "green")
+	final_passport_build_intro_button.pressed.connect(_on_FinalPassportBuildIntro_pressed)
+	final_passport_challenges_box.add_child(final_passport_build_intro_button)
+
+	final_passport_read_button = Button.new()
+	final_passport_read_button.text = "Read the Final Passport"
+	final_passport_read_button.custom_minimum_size = Vector2(520, 76)
+	final_passport_read_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	GameState.style_menu_button(final_passport_read_button, "purple")
+	final_passport_read_button.pressed.connect(_on_FinalPassportRead_pressed)
+	final_passport_challenges_box.add_child(final_passport_read_button)
+
 	status_panel = PanelContainer.new()
 	status_panel.add_theme_stylebox_override("panel", _status_panel_style())
 	root_vbox.add_child(status_panel)
@@ -250,10 +276,11 @@ func _render_zone() -> void:
 	var is_classroom_survival := GameState.current_zone_id == "classroom_survival"
 	var is_meet_classmates := GameState.current_zone_id == "meet_classmates"
 	var is_my_school_card := GameState.current_zone_id == "my_school_card"
+	var is_final_passport := GameState.current_zone_id == "final_passport"
 	minigames_list.clear()
 
-	# Keep title backgrounds only for zone 4 readability.
-	if is_my_school_card:
+	# Keep title backgrounds where needed for readability.
+	if is_my_school_card or is_final_passport:
 		zone_title_panel.add_theme_stylebox_override("panel", _description_panel_style())
 		minigame_title_panel.add_theme_stylebox_override("panel", _description_panel_style())
 	else:
@@ -269,6 +296,7 @@ func _render_zone() -> void:
 		classroom_challenges_box.visible = false
 		meet_classmates_challenges_box.visible = false
 		my_school_card_challenges_box.visible = false
+		final_passport_challenges_box.visible = false
 		complete_button.visible = false
 		status_label.text = "Press Start to begin the School Gate."
 		return
@@ -283,6 +311,7 @@ func _render_zone() -> void:
 		classroom_challenges_box.visible = true
 		meet_classmates_challenges_box.visible = false
 		my_school_card_challenges_box.visible = false
+		final_passport_challenges_box.visible = false
 		complete_button.visible = false
 		status_label.text = "Choose a challenge to start."
 		return
@@ -297,6 +326,7 @@ func _render_zone() -> void:
 		classroom_challenges_box.visible = false
 		meet_classmates_challenges_box.visible = true
 		my_school_card_challenges_box.visible = false
+		final_passport_challenges_box.visible = false
 		complete_button.visible = false
 		status_label.text = "Select one of the 3 challenges."
 		return
@@ -311,8 +341,24 @@ func _render_zone() -> void:
 		classroom_challenges_box.visible = false
 		meet_classmates_challenges_box.visible = false
 		my_school_card_challenges_box.visible = true
+		final_passport_challenges_box.visible = false
 		complete_button.visible = false
 		status_label.text = "Select one of the 3 challenges."
+		return
+
+	if is_final_passport:
+		top_spacer.custom_minimum_size = Vector2(0, 30)
+		minigame_title.visible = true
+		minigame_title_panel.visible = true
+		minigame_title.text = "Challenges"
+		minigames_list.visible = false
+		start_button.visible = false
+		classroom_challenges_box.visible = false
+		meet_classmates_challenges_box.visible = false
+		my_school_card_challenges_box.visible = false
+		final_passport_challenges_box.visible = true
+		complete_button.visible = false
+		status_label.text = "Select one of the 2 challenges."
 		return
 
 	top_spacer.custom_minimum_size = Vector2(0, 0)
@@ -328,6 +374,7 @@ func _render_zone() -> void:
 	classroom_challenges_box.visible = false
 	meet_classmates_challenges_box.visible = false
 	my_school_card_challenges_box.visible = false
+	final_passport_challenges_box.visible = false
 	complete_button.visible = true
 
 	if GameState.is_zone_completed(GameState.current_zone_id):
@@ -382,6 +429,12 @@ func _on_MySchoolCardLabel_pressed() -> void:
 
 func _on_MySchoolCardSentences_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/MySchoolCardPersonalSentences.tscn")
+
+func _on_FinalPassportBuildIntro_pressed() -> void:
+	GameState.change_scene_with_transition("res://scenes/FinalPassportBuildIntro.tscn")
+
+func _on_FinalPassportRead_pressed() -> void:
+	_show_not_implemented_notice("Read the Final Passport")
 
 func _description_panel_style() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()

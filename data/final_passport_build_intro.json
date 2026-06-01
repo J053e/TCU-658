@@ -1,0 +1,75 @@
+{
+  "zone_id": "final_passport",
+  "title": "Build Your Intro",
+  "instruction": "Build a personal introduction with 7 blocks. Put Hello first and Bye last.",
+  "total_slots": 7,
+  "pass_ratio": 0.7,
+  "correct_order": [
+    "hello",
+    "name",
+    "age",
+    "country",
+    "province",
+    "grade",
+    "bye"
+  ],
+  "blocks": [
+    {
+      "id": "hello",
+      "text": "Hello!",
+      "kind": "main"
+    },
+    {
+      "id": "name",
+      "text": "My name is [NAME].",
+      "kind": "main"
+    },
+    {
+      "id": "age",
+      "text": "I am [AGE] years old.",
+      "kind": "main"
+    },
+    {
+      "id": "country",
+      "text": "I am from [COUNTRY].",
+      "kind": "main",
+      "requires_input": "country"
+    },
+    {
+      "id": "province",
+      "text": "I live in [PROVINCE].",
+      "kind": "main",
+      "requires_input": "province"
+    },
+    {
+      "id": "grade",
+      "text": "I am in seventh grade.",
+      "kind": "main"
+    },
+    {
+      "id": "nice",
+      "text": "Nice to meet you.",
+      "kind": "main"
+    },
+    {
+      "id": "bye",
+      "text": "Bye!",
+      "kind": "main"
+    },
+    {
+      "id": "d_close_door",
+      "text": "Close the door.",
+      "kind": "distractor"
+    },
+    {
+      "id": "d_open_notebook",
+      "text": "Open your notebook.",
+      "kind": "distractor"
+    },
+    {
+      "id": "d_stand_up",
+      "text": "Stand up.",
+      "kind": "distractor"
+    }
+  ]
+}
