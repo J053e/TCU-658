@@ -15,6 +15,7 @@ var option_buttons := []
 var continue_button: Button
 var back_button: Button
 var repeat_button: Button
+var replay_audio_button: Button
 var result_status_label: Label
 
 var quiz_data: Dictionary = {}
@@ -23,11 +24,14 @@ var current_index := 0
 var correct_total := 0
 var answered_current := false
 var finished := false
+var tts_voice_id: String = ""
+var question_audio_player: AudioStreamPlayer
 
 func _ready() -> void:
 	GameState.decorate_screen(self, GameState.get_minigame_background("classroom_survival", "read_listen_click"))
 	_build_ui()
 	_load_data()
+	_prepare_tts_voice()
 	if GameState.has_challenge_result(CHALLENGE_ID):
 		_show_saved_summary()
 	else:
@@ -35,6 +39,9 @@ func _ready() -> void:
 	GameState.play_enter_transition(self)
 
 func _build_ui() -> void:
+	question_audio_player = AudioStreamPlayer.new()
+	add_child(question_audio_player)
+
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 48)
@@ -76,6 +83,15 @@ func _build_ui() -> void:
 	instruction_label.custom_minimum_size = Vector2(0, 56)
 	GameState.style_label(instruction_label, 28, true)
 	root.add_child(instruction_label)
+
+	replay_audio_button = Button.new()
+	replay_audio_button.text = "Play Instruction Audio"
+	replay_audio_button.custom_minimum_size = Vector2(340, 54)
+	replay_audio_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	GameState.style_menu_button(replay_audio_button, "blue")
+	replay_audio_button.add_theme_font_size_override("font_size", 26)
+	replay_audio_button.pressed.connect(_on_replay_audio_pressed)
+	root.add_child(replay_audio_button)
 
 	options_row = HBoxContainer.new()
 	options_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -216,6 +232,8 @@ func _show_question() -> void:
 	summary_spacer.custom_minimum_size = Vector2(0, 0)
 	repeat_button.visible = false
 	result_status_label.visible = false
+	replay_audio_button.visible = true
+	replay_audio_button.disabled = false
 
 	var options: Array = q.get("options", [])
 	for i in range(option_buttons.size()):
@@ -230,6 +248,7 @@ func _show_question() -> void:
 			_apply_option_style(b, false)
 		else:
 			b.visible = false
+	_play_current_question_audio()
 
 func _on_option_pressed(index: int) -> void:
 	if answered_current or current_index >= questions.size():
@@ -295,6 +314,7 @@ func _show_summary(result: Dictionary) -> void:
 		feedback_label.text += " Attempts: " + str(attempts)
 
 	options_row.visible = false
+	replay_audio_button.visible = false
 	summary_spacer.visible = true
 	summary_spacer.custom_minimum_size = Vector2(0, 0)
 	feedback_label.custom_minimum_size = Vector2(0, 64)
@@ -327,6 +347,11 @@ func _start_new_attempt() -> void:
 func _on_repeat_pressed() -> void:
 	_start_new_attempt()
 
+func _on_replay_audio_pressed() -> void:
+	if finished:
+		return
+	_play_current_question_audio()
+
 func _exit_with_badge_popup(scene_path: String, is_back: bool) -> void:
 	GameState.show_badge_popup_or_continue(
 		self,
@@ -336,6 +361,74 @@ func _exit_with_badge_popup(scene_path: String, is_back: bool) -> void:
 
 func _change_scene_after_popup(scene_path: String, is_back: bool) -> void:
 	GameState.change_scene_with_transition(scene_path, is_back)
+
+func _prepare_tts_voice() -> void:
+	if not DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+		return
+	var english_voices: Array = DisplayServer.tts_get_voices_for_language("en")
+	if not english_voices.is_empty():
+		tts_voice_id = String(english_voices[0])
+		return
+	var all_voices: Array = DisplayServer.tts_get_voices()
+	if not all_voices.is_empty():
+		var first_voice: Variant = all_voices[0]
+		if typeof(first_voice) == TYPE_DICTIONARY:
+			tts_voice_id = String((first_voice as Dictionary).get("id", ""))
+		else:
+			tts_voice_id = String(first_voice)
+
+func _play_current_question_audio() -> void:
+	if current_index < 0 or current_index >= questions.size():
+		return
+	var q: Dictionary = questions[current_index]
+	var audio_path := String(q.get("audio_path", "")).strip_edges()
+	var stream := _load_question_audio_stream(audio_path)
+	if stream != null:
+		question_audio_player.stop()
+		question_audio_player.stream = stream
+		question_audio_player.play()
+		return
+	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+		DisplayServer.tts_stop()
+		DisplayServer.tts_speak(String(q.get("instruction", "")), tts_voice_id)
+
+func _load_question_audio_stream(audio_path: String) -> AudioStream:
+	if audio_path == "":
+		return null
+
+	for candidate: String in _audio_path_candidates(audio_path):
+		if FileAccess.file_exists(candidate):
+			var bytes := FileAccess.get_file_as_bytes(candidate)
+			if _is_mp3_data(bytes):
+				var mp3 := AudioStreamMP3.new()
+				mp3.data = bytes
+				return mp3
+			if _is_ogg_data(bytes):
+				return AudioStreamOggVorbis.load_from_buffer(bytes)
+
+		if ResourceLoader.exists(candidate):
+			var imported := load(candidate)
+			if imported is AudioStream:
+				return imported
+
+	return null
+
+func _audio_path_candidates(audio_path: String) -> Array[String]:
+	var candidates: Array[String] = [audio_path]
+	var base := audio_path.get_basename()
+	for extension: String in [".ogg", ".mp3"]:
+		var candidate: String = base + extension
+		if not candidates.has(candidate):
+			candidates.append(candidate)
+	return candidates
+
+func _is_mp3_data(bytes: PackedByteArray) -> bool:
+	if bytes.size() >= 3 and bytes[0] == 0x49 and bytes[1] == 0x44 and bytes[2] == 0x33:
+		return true
+	return bytes.size() >= 2 and bytes[0] == 0xFF and (bytes[1] & 0xE0) == 0xE0
+
+func _is_ogg_data(bytes: PackedByteArray) -> bool:
+	return bytes.size() >= 4 and bytes[0] == 0x4F and bytes[1] == 0x67 and bytes[2] == 0x67 and bytes[3] == 0x53
 
 func _load_fitted_icon(path: String, max_size: Vector2i) -> Texture2D:
 	if path == "" or not ResourceLoader.exists(path):

@@ -1,12 +1,12 @@
 {
   "title": "My English Passport",
-  "instruction": "Listen to the question audio and choose the correct passport line. The question is audio-only.",
+  "instruction": "Listen to the question audio and choose the correct passport line.",
   "answers": [
-    { "id": "name_line", "text": "My name is [NAME] [LAST_NAME]." },
-    { "id": "age_line", "text": "I am [AGE] years old." },
     { "id": "country_line", "text": "I am from [COUNTRY]." },
-    { "id": "town_line", "text": "I live in [TOWN]." },
-    { "id": "grade_line", "text": "I am in seventh grade." }
+    { "id": "name_line", "text": "My name is [NAME] [LAST_NAME]." },
+    { "id": "grade_line", "text": "I am in seventh grade." },
+    { "id": "age_line", "text": "I am [AGE] years old." },
+    { "id": "town_line", "text": "I live in [TOWN]." }
   ],
   "questions": [
     {

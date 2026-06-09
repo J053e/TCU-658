@@ -17,6 +17,7 @@ var back_button: Button
 var repeat_button: Button
 var status_label: Label
 var replay_audio_button: Button
+var layout_offset_spacer: Control
 
 var challenge_data: Dictionary = {}
 var questions: Array = []
@@ -83,8 +84,12 @@ func _build_ui() -> void:
 	var root := VBoxContainer.new()
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_theme_constant_override("separation", 8)
+	root.add_theme_constant_override("separation", 5)
 	margin.add_child(root)
+
+	layout_offset_spacer = Control.new()
+	layout_offset_spacer.custom_minimum_size = Vector2(0, 24)
+	root.add_child(layout_offset_spacer)
 
 	title_label = Label.new()
 	title_label.text = "Listen the Final Passport"
@@ -100,15 +105,16 @@ func _build_ui() -> void:
 	instruction_label = Label.new()
 	instruction_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	instruction_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	instruction_label.custom_minimum_size = Vector2(0, 30)
+	instruction_label.custom_minimum_size = Vector2(0, 28)
 	GameState.style_label(instruction_label, 22, true)
 	root.add_child(instruction_label)
 
 	question_hint_label = Label.new()
 	question_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	question_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	question_hint_label.custom_minimum_size = Vector2(0, 34)
+	question_hint_label.custom_minimum_size = Vector2(0, 0)
 	GameState.style_label(question_hint_label, 24, true)
+	question_hint_label.visible = false
 	root.add_child(question_hint_label)
 
 	replay_audio_button = Button.new()
@@ -120,7 +126,8 @@ func _build_ui() -> void:
 	root.add_child(replay_audio_button)
 
 	answers_panel = PanelContainer.new()
-	answers_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	answers_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	answers_panel.custom_minimum_size = Vector2(0, 306)
 	answers_panel.add_theme_stylebox_override("panel", _panel_style())
 	root.add_child(answers_panel)
 
@@ -131,17 +138,12 @@ func _build_ui() -> void:
 	answers_margin.add_theme_constant_override("margin_bottom", 10)
 	answers_panel.add_child(answers_margin)
 
-	var answers_scroll := ScrollContainer.new()
-	answers_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	answers_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	answers_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
-	answers_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	answers_margin.add_child(answers_scroll)
-
 	answers_box = VBoxContainer.new()
 	answers_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	answers_box.add_theme_constant_override("separation", 8)
-	answers_scroll.add_child(answers_box)
+	answers_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	answers_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	answers_box.add_theme_constant_override("separation", 6)
+	answers_margin.add_child(answers_box)
 
 	feedback_label = Label.new()
 	feedback_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -232,6 +234,7 @@ func _start_new_attempt() -> void:
 	continue_button.disabled = true
 	repeat_button.visible = false
 	status_label.visible = false
+	layout_offset_spacer.custom_minimum_size = Vector2(0, 24)
 	replay_audio_button.visible = true
 	answers_panel.visible = true
 	feedback_label.text = ""
@@ -308,8 +311,10 @@ func _build_answer_buttons() -> void:
 			continue
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(0, 52)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.text = String(resolved_answers.get(answer_id, ""))
 		GameState.style_menu_button(button, "blue")
+		button.add_theme_font_size_override("font_size", 28)
 		button.pressed.connect(_on_answer_pressed.bind(answer_id))
 		answers_box.add_child(button)
 		answer_buttons[answer_id] = button
@@ -328,7 +333,8 @@ func _show_question() -> void:
 
 	progress_label.text = "Question " + str(current_index + 1) + "/" + str(questions.size())
 	instruction_label.text = String(challenge_data.get("instruction", "Listen to the question audio and choose the correct passport line."))
-	question_hint_label.text = "Question is audio-only."
+	question_hint_label.visible = false
+	question_hint_label.text = ""
 	feedback_label.text = ""
 	continue_button.disabled = true
 	replay_audio_button.disabled = false
@@ -342,14 +348,53 @@ func _play_current_question_audio() -> void:
 		return
 	var q: Dictionary = questions[current_index]
 	var audio_path := String(q.get("audio_path", "")).strip_edges()
-	if audio_path != "" and ResourceLoader.exists(audio_path):
+	var stream := _load_question_audio_stream(audio_path)
+	if stream != null:
 		question_audio_player.stop()
-		question_audio_player.stream = load(audio_path)
+		question_audio_player.stream = stream
 		question_audio_player.play()
 		return
 	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		DisplayServer.tts_stop()
 		DisplayServer.tts_speak(String(q.get("prompt", "")), tts_voice_id)
+
+func _load_question_audio_stream(audio_path: String) -> AudioStream:
+	if audio_path == "":
+		return null
+
+	for candidate: String in _audio_path_candidates(audio_path):
+		if FileAccess.file_exists(candidate):
+			var bytes := FileAccess.get_file_as_bytes(candidate)
+			if _is_mp3_data(bytes):
+				var mp3 := AudioStreamMP3.new()
+				mp3.data = bytes
+				return mp3
+			if _is_ogg_data(bytes):
+				return AudioStreamOggVorbis.load_from_buffer(bytes)
+
+		if ResourceLoader.exists(candidate):
+			var imported := load(candidate)
+			if imported is AudioStream:
+				return imported
+
+	return null
+
+func _audio_path_candidates(audio_path: String) -> Array[String]:
+	var candidates: Array[String] = [audio_path]
+	var base := audio_path.get_basename()
+	for extension: String in [".ogg", ".mp3"]:
+		var candidate: String = base + extension
+		if not candidates.has(candidate):
+			candidates.append(candidate)
+	return candidates
+
+func _is_mp3_data(bytes: PackedByteArray) -> bool:
+	if bytes.size() >= 3 and bytes[0] == 0x49 and bytes[1] == 0x44 and bytes[2] == 0x33:
+		return true
+	return bytes.size() >= 2 and bytes[0] == 0xFF and (bytes[1] & 0xE0) == 0xE0
+
+func _is_ogg_data(bytes: PackedByteArray) -> bool:
+	return bytes.size() >= 4 and bytes[0] == 0x4F and bytes[1] == 0x67 and bytes[2] == 0x67 and bytes[3] == 0x53
 
 func _on_replay_audio_pressed() -> void:
 	if finished:
@@ -428,7 +473,9 @@ func _show_summary(result: Dictionary) -> void:
 	var last_feedback := String(result.get("last_attempt_feedback", "")).strip_edges()
 
 	progress_label.text = "Challenge Complete"
+	layout_offset_spacer.custom_minimum_size = Vector2(0, 74)
 	instruction_label.text = "Audio comprehension of passport information."
+	question_hint_label.visible = true
 	question_hint_label.text = last_feedback
 	question_hint_label.custom_minimum_size = Vector2(0, 86)
 	question_hint_label.add_theme_font_size_override("font_size", 22)
