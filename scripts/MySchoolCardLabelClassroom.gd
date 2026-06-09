@@ -225,18 +225,19 @@ func _on_check_pressed() -> void:
 	var expected := _normalize_answer(String(current.get("answer", "")))
 	var given := _normalize_answer(answer_input.text)
 	var is_correct := expected != "" and given == expected
+	var popup_text := ""
 	if is_correct:
 		correct_total += 1
-		feedback_label.text = "Correct!"
-		feedback_label.add_theme_color_override("font_color", Color(0.78, 1.0, 0.76))
+		popup_text = "Great! You labelled this object."
 	else:
-		feedback_label.text = "Incorrect. Try again in the next one."
-		feedback_label.add_theme_color_override("font_color", Color(1.0, 0.76, 0.76))
+		popup_text = "Not quite. Look carefully at the next object."
 
 	answer_input.editable = false
 	check_button.disabled = true
-	continue_button.disabled = false
+	continue_button.disabled = true
+	feedback_label.text = ""
 	answered_current = true
+	GameState.show_answer_feedback_popup(self, popup_text, is_correct, Callable(self, "_on_continue_pressed"))
 
 func _on_continue_pressed() -> void:
 	if challenge_finished:

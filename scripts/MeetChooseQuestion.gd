@@ -411,22 +411,25 @@ func _on_check_pressed() -> void:
 
 	answered_current = true
 	check_button.disabled = true
-	continue_button.disabled = false
+	continue_button.disabled = true
 
 	var item: Dictionary = situations[current_index]
 	var correct_index: int = int(item.get("correct_index", -1))
 	var correct_id := "q" + str(correct_index)
 	var is_correct := selected_option_id == correct_id
+	var popup_text := ""
 
 	if is_correct:
 		correct_total += 1
-		feedback_label.text = String(item.get("correct_feedback", "Correct!"))
+		popup_text = String(item.get("correct_feedback", "Correct!"))
 	else:
-		feedback_label.text = String(item.get("incorrect_feedback", "Try again."))
+		popup_text = String(item.get("incorrect_feedback", "Try again."))
 
+	feedback_label.text = ""
 	bank_title.text = "Question Bank"
 	_render_socket()
 	_render_bank()
+	GameState.show_answer_feedback_popup(self, popup_text, is_correct, Callable(self, "_on_continue_pressed"))
 
 func _on_continue_pressed() -> void:
 	if finished:

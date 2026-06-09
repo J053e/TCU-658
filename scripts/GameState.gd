@@ -18,6 +18,13 @@ const ZONE_CHALLENGE_REQUIREMENTS := {
 	"my_school_card": ["my_school_card_fill_profile", "my_school_card_label_classroom", "my_school_card_personal_sentences"],
 	"final_passport": ["final_passport_build_intro", "final_passport_read_passport"]
 }
+const ZONE_BADGE_FEEDBACK := {
+	"school_gate": "Great!\nYou can greet people at school!",
+	"classroom_survival": "Great!\nYou can understand simple classroom language!",
+	"meet_classmates": "Great!\nYou can start short conversations now.",
+	"my_school_card": "Great!\nYou can share your school profile in English!",
+	"final_passport": "Great!\nYou completed your English Passport!"
+}
 
 var content := {}
 var current_zone_id := ""
@@ -300,8 +307,9 @@ func show_badge_popup_or_continue(root: Control, zone_id: String, on_continue: C
 	content.add_child(title)
 
 	var subtitle := Label.new()
-	subtitle.text = "You earned a new medal."
+	subtitle.text = "You earned a new medal.\n" + String(ZONE_BADGE_FEEDBACK.get(zone_id, "Keep using your English skills!"))
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	style_label(subtitle, 24, false)
 	content.add_child(subtitle)
 
@@ -327,6 +335,97 @@ func show_badge_popup_or_continue(root: Control, zone_id: String, on_continue: C
 		if on_continue.is_valid():
 			on_continue.call()
 	)
+
+func show_answer_feedback_popup(root: Control, feedback_text: String, is_correct: bool, on_continue: Callable) -> void:
+	if root == null or not is_instance_valid(root):
+		if on_continue.is_valid():
+			on_continue.call()
+		return
+
+	var layer := CanvasLayer.new()
+	layer.layer = 290
+	root.add_child(layer)
+
+	var dim := ColorRect.new()
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.color = Color(0, 0, 0, 0.48)
+	dim.modulate.a = 0.0
+	layer.add_child(dim)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(center)
+
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(520, 300)
+	panel.add_theme_stylebox_override("panel", _answer_feedback_popup_style(is_correct))
+	panel.scale = Vector2(0.82, 0.82)
+	panel.modulate.a = 0.0
+	center.add_child(panel)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_top", 22)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_bottom", 22)
+	panel.add_child(margin)
+
+	var content_box := VBoxContainer.new()
+	content_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	content_box.add_theme_constant_override("separation", 12)
+	margin.add_child(content_box)
+
+	var icon := Label.new()
+	icon.text = "✓" if is_correct else "X"
+	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon.add_theme_font_override("font", pretty_font)
+	icon.add_theme_font_size_override("font_size", 74)
+	icon.add_theme_color_override("font_color", Color(0.60, 1.0, 0.58) if is_correct else Color(1.0, 0.48, 0.48))
+	icon.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08))
+	icon.add_theme_constant_override("outline_size", 5)
+	content_box.add_child(icon)
+
+	var message := Label.new()
+	message.text = feedback_text
+	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	message.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	message.custom_minimum_size = Vector2(430, 72)
+	style_label(message, 26, true)
+	content_box.add_child(message)
+
+	var continue_button := Button.new()
+	continue_button.text = "Continue"
+	continue_button.custom_minimum_size = Vector2(220, 64)
+	style_menu_button(continue_button, "green" if is_correct else "orange")
+	content_box.add_child(continue_button)
+
+	continue_button.pressed.connect(func() -> void:
+		if is_instance_valid(layer):
+			layer.queue_free()
+		if on_continue.is_valid():
+			on_continue.call()
+	)
+
+	var tween := get_tree().create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(dim, "modulate:a", 1.0, 0.16)
+	tween.tween_property(panel, "modulate:a", 1.0, 0.16)
+	tween.tween_property(panel, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _answer_feedback_popup_style(is_correct: bool) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.06, 0.10, 0.23, 0.98)
+	sb.border_color = Color(0.62, 1.0, 0.58, 1.0) if is_correct else Color(1.0, 0.48, 0.48, 1.0)
+	sb.set_border_width_all(4)
+	sb.corner_radius_top_left = 22
+	sb.corner_radius_top_right = 22
+	sb.corner_radius_bottom_right = 22
+	sb.corner_radius_bottom_left = 22
+	sb.shadow_color = Color(0, 0, 0, 0.40)
+	sb.shadow_size = 10
+	sb.shadow_offset = Vector2(0, 4)
+	return sb
 
 func _medal_popup_style() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()

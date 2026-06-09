@@ -234,18 +234,19 @@ func _on_option_pressed(option_index: int) -> void:
 	var q: Dictionary = questions[current_index]
 	var correct_index := int(q.get("correct_index", -1))
 	var is_correct := option_index == correct_index
+	var popup_text := ""
 	if is_correct:
 		correct_total += 1
-		feedback_label.text = String(q.get("correct_feedback", "Correct!"))
-		feedback_label.add_theme_color_override("font_color", Color(0.78, 1.0, 0.76))
+		popup_text = String(q.get("correct_feedback", "Correct!"))
 	else:
-		feedback_label.text = String(q.get("incorrect_feedback", "Try again."))
-		feedback_label.add_theme_color_override("font_color", Color(1.0, 0.76, 0.76))
+		popup_text = String(q.get("incorrect_feedback", "Try again."))
 
 	for btn in option_buttons:
 		btn.disabled = true
-	continue_button.disabled = false
+	feedback_label.text = ""
+	continue_button.disabled = true
 	answered_current = true
+	GameState.show_answer_feedback_popup(self, popup_text, is_correct, Callable(self, "_on_continue_pressed"))
 
 func _on_continue_pressed() -> void:
 	if challenge_finished:

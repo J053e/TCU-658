@@ -397,7 +397,7 @@ func _on_check_pressed() -> void:
 
 	answered_current = true
 	check_button.disabled = true
-	continue_button.disabled = false
+	continue_button.disabled = true
 
 	var is_correct := true
 	for i in range(current_order_ids.size()):
@@ -406,15 +406,18 @@ func _on_check_pressed() -> void:
 			break
 
 	var dialogue: Dictionary = dialogues[current_index]
+	var popup_text := ""
 	if is_correct:
 		correct_total += 1
-		feedback_label.text = String(dialogue.get("correct_feedback", "Correct order!"))
+		popup_text = String(dialogue.get("correct_feedback", "Correct order!"))
 	else:
-		feedback_label.text = String(dialogue.get("incorrect_feedback", "Check the order again."))
+		popup_text = String(dialogue.get("incorrect_feedback", "Check the order again."))
 
+	feedback_label.text = ""
 	bank_title.text = "Sentence Bank"
 	_render_slots()
 	_render_bank()
+	GameState.show_answer_feedback_popup(self, popup_text, is_correct, Callable(self, "_on_continue_pressed"))
 
 func _on_continue_pressed() -> void:
 	if finished:

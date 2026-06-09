@@ -410,19 +410,20 @@ func _on_answer_pressed(answer_id: String) -> void:
 	var correct_id := String(q.get("answer_id", ""))
 	var correct := answer_id == correct_id
 	var correct_text := String(resolved_answers.get(correct_id, ""))
+	var popup_text := ""
 	if correct:
 		correct_total += 1
-		feedback_label.text = String(q.get("correct_feedback", "Correct!"))
-		feedback_label.add_theme_color_override("font_color", Color(0.78, 1.0, 0.76))
+		popup_text = String(q.get("correct_feedback", "Correct!"))
 	else:
-		feedback_label.text = String(q.get("incorrect_feedback", "Try again."))
-		feedback_label.add_theme_color_override("font_color", Color(1.0, 0.76, 0.76))
+		popup_text = String(q.get("incorrect_feedback", "Try again."))
 		var prompt := String(q.get("prompt", ""))
 		attempt_issues.append("For \"%s\", the best answer was \"%s\"." % [prompt, correct_text])
 	for button in answer_buttons.values():
 		(button as Button).disabled = true
-	continue_button.disabled = false
+	feedback_label.text = ""
+	continue_button.disabled = true
 	answered_current = true
+	GameState.show_answer_feedback_popup(self, popup_text, correct, Callable(self, "_on_continue_pressed"))
 
 func _on_continue_pressed() -> void:
 	if finished:
