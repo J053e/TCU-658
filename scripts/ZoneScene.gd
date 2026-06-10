@@ -282,9 +282,12 @@ func _render_zone() -> void:
 	# Keep title backgrounds where needed for readability.
 	if is_my_school_card or is_final_passport:
 		zone_title_panel.add_theme_stylebox_override("panel", _description_panel_style())
-		minigame_title_panel.add_theme_stylebox_override("panel", _description_panel_style())
 	else:
 		zone_title_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+
+	if is_meet_classmates or is_my_school_card or is_final_passport:
+		minigame_title_panel.add_theme_stylebox_override("panel", _description_panel_style())
+	else:
 		minigame_title_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
 	if is_school_gate:

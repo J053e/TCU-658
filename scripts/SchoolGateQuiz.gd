@@ -40,20 +40,20 @@ func _build_ui() -> void:
 	var screen_margin := MarginContainer.new()
 	screen_margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	screen_margin.add_theme_constant_override("margin_left", 64)
-	screen_margin.add_theme_constant_override("margin_top", 18)
+	screen_margin.add_theme_constant_override("margin_top", 14)
 	screen_margin.add_theme_constant_override("margin_right", 64)
-	screen_margin.add_theme_constant_override("margin_bottom", 40)
+	screen_margin.add_theme_constant_override("margin_bottom", 64)
 	add_child(screen_margin)
 
 	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 8)
+	root.add_theme_constant_override("separation", 6)
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.custom_minimum_size = Vector2(1060, 0)
 	screen_margin.add_child(root)
 
 	top_spacer = Control.new()
-	top_spacer.custom_minimum_size = Vector2(0, 44)
+	top_spacer.custom_minimum_size = Vector2(0, 28)
 	root.add_child(top_spacer)
 
 	progress_label = Label.new()
@@ -66,19 +66,19 @@ func _build_ui() -> void:
 	question_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	question_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	question_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	question_label.custom_minimum_size = Vector2(0, 54)
+	question_label.custom_minimum_size = Vector2(0, 48)
 	GameState.style_label(question_label, 22, false)
 	root.add_child(question_label)
 
 	situation_image = TextureRect.new()
-	situation_image.custom_minimum_size = Vector2(760, 210)
+	situation_image.custom_minimum_size = Vector2(760, 190)
 	situation_image.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	situation_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	situation_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_child(situation_image)
 
 	options_top_spacer = Control.new()
-	options_top_spacer.custom_minimum_size = Vector2(0, 10)
+	options_top_spacer.custom_minimum_size = Vector2(0, 6)
 	root.add_child(options_top_spacer)
 
 	options_box = VBoxContainer.new()
@@ -87,7 +87,7 @@ func _build_ui() -> void:
 	for i in range(3):
 		var button := Button.new()
 		GameState.style_menu_button(button, ["blue", "green", "purple"][i])
-		button.custom_minimum_size = Vector2(0, 42)
+		button.custom_minimum_size = Vector2(0, 40)
 		button.pressed.connect(_on_option_pressed.bind(i))
 		options_box.add_child(button)
 		option_buttons.append(button)
@@ -109,6 +109,7 @@ func _build_ui() -> void:
 
 	var actions := HBoxContainer.new()
 	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.custom_minimum_size = Vector2(0, 58)
 	actions.alignment = BoxContainer.ALIGNMENT_CENTER
 	actions.add_theme_constant_override("separation", 10)
 	root.add_child(actions)
@@ -122,6 +123,7 @@ func _build_ui() -> void:
 
 	back_button = Button.new()
 	back_button.text = "Back"
+	back_button.focus_mode = Control.FOCUS_NONE
 	GameState.style_menu_button(back_button, "orange")
 	back_button.pressed.connect(_on_back_pressed)
 	actions.add_child(back_button)
@@ -163,9 +165,9 @@ func _show_question() -> void:
 	progress_label.text = "Question " + str(current_index + 1) + "/" + str(questions.size())
 	progress_label.add_theme_font_size_override("font_size", 24)
 	progress_label.add_theme_constant_override("outline_size", 0)
-	top_spacer.custom_minimum_size = Vector2(0, 44)
+	top_spacer.custom_minimum_size = Vector2(0, 28)
 	question_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	question_label.custom_minimum_size = Vector2(0, 54)
+	question_label.custom_minimum_size = Vector2(0, 48)
 	question_label.add_theme_font_size_override("font_size", 22)
 	question_label.text = q.get("prompt", "")
 	feedback_label.custom_minimum_size = Vector2(0, 10)
@@ -174,11 +176,12 @@ func _show_question() -> void:
 	answered_current = false
 	quiz_finished = false
 	continue_button.text = "Continue"
+	continue_button.visible = false
 	continue_button.disabled = true
 	repeat_button.visible = false
 	result_status_label.visible = false
 	situation_image.visible = true
-	situation_image.custom_minimum_size = Vector2(760, 210)
+	situation_image.custom_minimum_size = Vector2(760, 190)
 	options_top_spacer.visible = true
 	options_box.visible = true
 	bottom_spacer.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -269,6 +272,7 @@ func _show_summary(result: Dictionary) -> void:
 	feedback_label.custom_minimum_size = Vector2(0, 64)
 	feedback_label.add_theme_font_size_override("font_size", 20)
 	bottom_spacer.custom_minimum_size = Vector2(0, 0)
+	continue_button.visible = true
 	continue_button.text = "Back to Zones"
 	continue_button.disabled = false
 	repeat_button.visible = true

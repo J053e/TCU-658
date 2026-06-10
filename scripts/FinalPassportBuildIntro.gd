@@ -404,6 +404,7 @@ func _resolved_bank_text(block_id: String) -> String:
 	var template := String(block_text_by_id.get(block_id, ""))
 	template = template.replace("[NAME]", _profile_name())
 	template = template.replace("[AGE]", _profile_age())
+	template = template.replace("[GRADE]", _profile_grade())
 	return template
 
 func _resolved_slot_text(slot_index: int, block_id: String) -> String:
@@ -432,6 +433,10 @@ func _profile_province() -> String:
 	var value := String(GameState.profile.get("province", "")).strip_edges()
 	return value if value != "" else "Cartago"
 
+func _profile_grade() -> String:
+	var value := String(GameState.profile.get("grade", "")).strip_edges()
+	return value.to_lower() if value != "" else "seventh"
+
 func _slot_req_key(slot_index: int) -> String:
 	return "slot_" + str(slot_index)
 
@@ -456,9 +461,9 @@ func _on_slot_sentence_dropped(slot_index: int, sentence_id: String) -> void:
 	_remove_from_bank(sentence_id)
 	slot_assignments[slot_index] = sentence_id
 	if sentence_id == "country":
-		slot_custom_values[_slot_req_key(slot_index)] = ""
+		slot_custom_values[_slot_req_key(slot_index)] = _profile_country()
 	if sentence_id == "province":
-		slot_custom_values[_slot_req_key(slot_index)] = ""
+		slot_custom_values[_slot_req_key(slot_index)] = _profile_province()
 	_render_slots()
 	_render_bank()
 	_update_check_availability()
@@ -565,6 +570,7 @@ func _on_check_pressed() -> void:
 	result["passport_name"] = String(GameState.profile.get("name", "")).strip_edges()
 	result["passport_last_name"] = String(GameState.profile.get("last_name", "")).strip_edges()
 	result["passport_age"] = String(GameState.profile.get("age", "")).strip_edges()
+	result["passport_grade"] = _profile_grade()
 	result["last_attempt_summary"] = attempt_summary
 	result["last_attempt_passed"] = passed_now
 	result["last_attempt_score"] = score

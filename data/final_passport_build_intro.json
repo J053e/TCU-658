@@ -43,7 +43,7 @@
     },
     {
       "id": "grade",
-      "text": "I am in seventh grade.",
+      "text": "I am in [GRADE] grade.",
       "kind": "main"
     },
     {

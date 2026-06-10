@@ -45,9 +45,9 @@ func _build_ui() -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 48)
-	margin.add_theme_constant_override("margin_top", 42)
+	margin.add_theme_constant_override("margin_top", 34)
 	margin.add_theme_constant_override("margin_right", 48)
-	margin.add_theme_constant_override("margin_bottom", 42)
+	margin.add_theme_constant_override("margin_bottom", 58)
 	add_child(margin)
 
 	var center := CenterContainer.new()
@@ -56,7 +56,7 @@ func _build_ui() -> void:
 
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 8)
-	root.custom_minimum_size = Vector2(1120, 590)
+	root.custom_minimum_size = Vector2(1120, 560)
 	root.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	root.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	center.add_child(root)
@@ -117,6 +117,7 @@ func _build_ui() -> void:
 
 	var actions := HBoxContainer.new()
 	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.custom_minimum_size = Vector2(0, 58)
 	actions.alignment = BoxContainer.ALIGNMENT_CENTER
 	actions.add_theme_constant_override("separation", 12)
 	root.add_child(actions)
@@ -130,6 +131,7 @@ func _build_ui() -> void:
 
 	back_button = Button.new()
 	back_button.text = "Back"
+	back_button.focus_mode = Control.FOCUS_NONE
 	GameState.style_menu_button(back_button, "orange")
 	back_button.pressed.connect(_on_back_pressed)
 	actions.add_child(back_button)
@@ -182,10 +184,15 @@ func _apply_option_style(button: Button, hovered: bool) -> void:
 	hover.shadow_size = 8
 	hover.shadow_offset = Vector2(0, 0)
 
+	var disabled := normal.duplicate() as StyleBoxFlat
+	disabled.bg_color = Color(0.05, 0.08, 0.16, 0.48)
+	disabled.border_color = Color(0.72, 0.82, 0.95, 0.55)
+
 	var chosen := hover if hovered else normal
 	button.add_theme_stylebox_override("normal", chosen)
 	button.add_theme_stylebox_override("hover", hover)
 	button.add_theme_stylebox_override("pressed", hover)
+	button.add_theme_stylebox_override("disabled", disabled)
 
 func _on_option_hover(button: Button, entered: bool) -> void:
 	if button.disabled:
@@ -225,6 +232,7 @@ func _show_question() -> void:
 	feedback_label.text = ""
 	answered_current = false
 	finished = false
+	continue_button.visible = false
 	continue_button.disabled = true
 	continue_button.text = "Continue"
 	options_row.visible = true
@@ -322,6 +330,7 @@ func _show_summary(result: Dictionary) -> void:
 	summary_spacer.custom_minimum_size = Vector2(0, 0)
 	feedback_label.custom_minimum_size = Vector2(0, 64)
 	feedback_label.add_theme_font_size_override("font_size", 20)
+	continue_button.visible = true
 	continue_button.text = "Back to Zone"
 	continue_button.disabled = false
 	repeat_button.visible = true

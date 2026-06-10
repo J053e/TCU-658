@@ -54,9 +54,9 @@ func _build_ui() -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 44)
-	margin.add_theme_constant_override("margin_top", 18)
+	margin.add_theme_constant_override("margin_top", 34)
 	margin.add_theme_constant_override("margin_right", 44)
-	margin.add_theme_constant_override("margin_bottom", 14)
+	margin.add_theme_constant_override("margin_bottom", 8)
 	add_child(margin)
 
 	var root := VBoxContainer.new()
@@ -313,8 +313,8 @@ func _show_situation() -> void:
 	answered_current = false
 	screen_title_label.visible = true
 	check_button.visible = true
-	continue_button.visible = true
 	back_button.visible = true
+	continue_button.visible = false
 	continue_button.disabled = true
 	continue_button.text = "Continue"
 	check_button.disabled = false
@@ -516,6 +516,7 @@ func _show_summary(result: Dictionary) -> void:
 	if attempts > 1:
 		feedback_label.text += " Attempts: " + str(attempts)
 
+	continue_button.visible = true
 	continue_button.text = "Back to Zone"
 	continue_button.disabled = false
 	repeat_button.visible = true

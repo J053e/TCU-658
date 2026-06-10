@@ -51,15 +51,15 @@ func _build_ui() -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 44)
-	margin.add_theme_constant_override("margin_top", 24)
+	margin.add_theme_constant_override("margin_top", 20)
 	margin.add_theme_constant_override("margin_right", 44)
-	margin.add_theme_constant_override("margin_bottom", 28)
+	margin.add_theme_constant_override("margin_bottom", 52)
 	add_child(margin)
 
 	var root := VBoxContainer.new()
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_theme_constant_override("separation", 8)
+	root.add_theme_constant_override("separation", 5)
 	margin.add_child(root)
 
 	screen_title_label = Label.new()
@@ -88,6 +88,7 @@ func _build_ui() -> void:
 	content_row = HBoxContainer.new()
 	content_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content_row.custom_minimum_size = Vector2(0, 400)
 	content_row.add_theme_constant_override("separation", 12)
 	root.add_child(content_row)
 
@@ -150,6 +151,7 @@ func _build_ui() -> void:
 
 	var actions := HBoxContainer.new()
 	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.custom_minimum_size = Vector2(0, 58)
 	actions.alignment = BoxContainer.ALIGNMENT_CENTER
 	actions.add_theme_constant_override("separation", 10)
 	root.add_child(actions)
@@ -239,9 +241,9 @@ func _show_dialogue() -> void:
 
 	answered_current = false
 	screen_title_label.visible = true
+	continue_button.visible = false
 	continue_button.disabled = true
 	continue_button.text = "Continue"
-	continue_button.visible = true
 	check_button.disabled = false
 	check_button.visible = true
 	repeat_button.visible = false
@@ -249,6 +251,8 @@ func _show_dialogue() -> void:
 	feedback_label.text = ""
 	bank_title.text = "Sentence Bank (drag to sockets)"
 	top_spacer.custom_minimum_size = Vector2(0, 4)
+	prompt_label.custom_minimum_size = Vector2(0, 34)
+	feedback_label.custom_minimum_size = Vector2(0, 24)
 	content_row.visible = true
 	slots_box.visible = true
 	bank_panel.visible = true
@@ -261,7 +265,7 @@ func _show_dialogue() -> void:
 	var dialogue: Dictionary = dialogues[current_index]
 	var label := String(dialogue.get("label", "Dialogue"))
 	progress_label.text = label + "  " + str(current_index + 1) + "/" + str(dialogues.size())
-	prompt_label.text = "Drag each sentence to the correct socket."
+	prompt_label.text = "Drag each sentence to the correct socket in the correct order."
 
 	var blocks: Array = dialogue.get("blocks", [])
 	current_sentence_map.clear()
@@ -269,7 +273,7 @@ func _show_dialogue() -> void:
 	for i in range(blocks.size()):
 		var sid := "s" + str(i)
 		current_order_ids.append(sid)
-		current_sentence_map[sid] = String(blocks[i])
+		current_sentence_map[sid] = _display_sentence(String(blocks[i]), i)
 
 	slot_assignments.clear()
 	slot_assignments.resize(blocks.size())
@@ -287,9 +291,11 @@ func _render_slots() -> void:
 		child.queue_free()
 	slot_controls.clear()
 
+	var slot_height := 58 if slot_assignments.size() >= 6 else 62
 	for i in range(slot_assignments.size()):
 		var slot = DropSlotScript.new()
-		slot.custom_minimum_size = Vector2(560, 52)
+		slot.custom_minimum_size = Vector2(560, slot_height)
+		slot.set_text_min_height(slot_height - 8)
 		slot.add_theme_stylebox_override("panel", _slot_style())
 		slot.configure(i)
 		slot.set_locked(answered_current)
@@ -321,6 +327,13 @@ func _render_bank() -> void:
 		bank_flow.add_child(chip)
 	if bank_panel != null:
 		bank_panel.set_locked(answered_current)
+
+func _display_sentence(raw_text: String, index: int) -> String:
+	var colon_index := raw_text.find(":")
+	if colon_index >= 0 and colon_index <= 18:
+		return raw_text
+	var speaker := "Speaker A" if index % 2 == 0 else "Speaker B"
+	return speaker + ": " + raw_text
 
 func _bank_chip_style() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
@@ -468,6 +481,7 @@ func _show_summary(result: Dictionary) -> void:
 	if attempts > 1:
 		feedback_label.text += " Attempts: " + str(attempts)
 
+	continue_button.visible = true
 	continue_button.text = "Back to Zone"
 	continue_button.disabled = false
 	repeat_button.visible = true

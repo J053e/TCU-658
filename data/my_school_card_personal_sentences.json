@@ -30,7 +30,7 @@
     {
       "id": "ps04",
       "sentence": "I am in ________ grade.",
-      "options": ["seventh", "thank you", "board"],
+      "options": ["[GRADE]", "thank you", "board"],
       "correct_index": 0,
       "correct_feedback": "Excellent!",
       "incorrect_feedback": "Pick the school grade."

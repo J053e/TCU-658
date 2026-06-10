@@ -4,7 +4,7 @@
   "answers": [
     { "id": "country_line", "text": "I am from [COUNTRY]." },
     { "id": "name_line", "text": "My name is [NAME] [LAST_NAME]." },
-    { "id": "grade_line", "text": "I am in seventh grade." },
+    { "id": "grade_line", "text": "I am in [GRADE] grade." },
     { "id": "age_line", "text": "I am [AGE] years old." },
     { "id": "town_line", "text": "I live in [TOWN]." }
   ],

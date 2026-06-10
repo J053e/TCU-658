@@ -113,11 +113,23 @@ func _update_button_labels() -> void:
 		button.text = base_label + suffix
 
 func _add_badges_row(container: VBoxContainer) -> void:
+	var badges_title_panel := PanelContainer.new()
+	badges_title_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	badges_title_panel.add_theme_stylebox_override("panel", _readable_label_style())
+	container.add_child(badges_title_panel)
+
+	var badges_title_margin := MarginContainer.new()
+	badges_title_margin.add_theme_constant_override("margin_left", 18)
+	badges_title_margin.add_theme_constant_override("margin_top", 4)
+	badges_title_margin.add_theme_constant_override("margin_right", 18)
+	badges_title_margin.add_theme_constant_override("margin_bottom", 4)
+	badges_title_panel.add_child(badges_title_margin)
+
 	var badges_title := Label.new()
 	badges_title.text = "Badges"
 	badges_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	GameState.style_label(badges_title, 24, false)
-	container.add_child(badges_title)
+	badges_title_margin.add_child(badges_title)
 
 	var badges_row := HBoxContainer.new()
 	badges_row.add_theme_constant_override("separation", 12)
@@ -321,4 +333,15 @@ func _profile_modal_style() -> StyleBoxFlat:
 	sb.corner_radius_top_right = 10
 	sb.corner_radius_bottom_right = 10
 	sb.corner_radius_bottom_left = 10
+	return sb
+
+func _readable_label_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.05, 0.09, 0.18, 0.74)
+	sb.border_color = Color(0.72, 0.86, 1.0, 0.9)
+	sb.set_border_width_all(2)
+	sb.corner_radius_top_left = 12
+	sb.corner_radius_top_right = 12
+	sb.corner_radius_bottom_right = 12
+	sb.corner_radius_bottom_left = 12
 	return sb

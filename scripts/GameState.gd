@@ -565,14 +565,18 @@ func style_menu_button(button: Button, palette: String = "blue") -> void:
 	var normal := _make_button_style(base_color, border_color)
 	var hover := _make_button_style(hover_color, border_color.lightened(0.08))
 	var pressed := _make_button_style(pressed_color, border_color.darkened(0.1))
+	var disabled := _make_button_style(base_color.darkened(0.28), border_color.darkened(0.18))
+	disabled.bg_color.a = 0.52
 
 	button.add_theme_stylebox_override("normal", normal)
 	button.add_theme_stylebox_override("hover", hover)
 	button.add_theme_stylebox_override("pressed", pressed)
 	button.add_theme_stylebox_override("focus", hover)
+	button.add_theme_stylebox_override("disabled", disabled)
 	button.add_theme_color_override("font_color", Color(1, 1, 1))
 	button.add_theme_color_override("font_hover_color", Color(1, 1, 1))
 	button.add_theme_color_override("font_pressed_color", Color(1, 1, 1))
+	button.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0.48))
 	button.add_theme_constant_override("outline_size", 1)
 	button.custom_minimum_size = Vector2(maxf(button.custom_minimum_size.x, 170.0), maxf(button.custom_minimum_size.y, 52.0))
 	button.add_theme_font_override("font", pretty_font)

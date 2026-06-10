@@ -112,6 +112,7 @@ func _build_ui() -> void:
 
 	continue_button = Button.new()
 	continue_button.text = "Continue"
+	continue_button.visible = false
 	continue_button.disabled = true
 	GameState.style_menu_button(continue_button, "yellow")
 	continue_button.pressed.connect(_on_continue_pressed)
@@ -158,7 +159,7 @@ func _start_new_attempt() -> void:
 	header_spacer.custom_minimum_size = Vector2(0, 0)
 	progress_label.add_theme_font_size_override("font_size", 24)
 	continue_button.text = "Continue"
-	continue_button.visible = true
+	continue_button.visible = false
 	continue_button.disabled = true
 	repeat_button.visible = false
 	back_button.visible = true
@@ -211,6 +212,8 @@ func _resolve_option_text(raw_text: String) -> String:
 			return _get_profile_age()
 		"[TOWN]":
 			return _get_profile_town()
+		"[GRADE]":
+			return _get_profile_grade()
 		_:
 			return cleaned
 
@@ -225,6 +228,10 @@ func _get_profile_age() -> String:
 func _get_profile_town() -> String:
 	var profile_town := String(GameState.profile.get("province", "")).strip_edges()
 	return profile_town if profile_town != "" else "Cartago"
+
+func _get_profile_grade() -> String:
+	var profile_grade := String(GameState.profile.get("grade", "")).strip_edges()
+	return profile_grade.to_lower() if profile_grade != "" else "seventh"
 
 func _on_option_pressed(option_index: int) -> void:
 	if challenge_finished or answered_current:

@@ -122,6 +122,7 @@ func _build_ui() -> void:
 
 	continue_button = Button.new()
 	continue_button.text = "Continue"
+	continue_button.visible = false
 	continue_button.disabled = true
 	GameState.style_menu_button(continue_button, "yellow")
 	continue_button.pressed.connect(_on_continue_pressed)
@@ -167,8 +168,8 @@ func _start_new_attempt() -> void:
 	challenge_finished = false
 	progress_label.add_theme_font_size_override("font_size", 24)
 	check_button.visible = true
-	continue_button.visible = true
 	continue_button.text = "Continue"
+	continue_button.visible = false
 	continue_button.disabled = true
 	repeat_button.visible = false
 	status_label.visible = false

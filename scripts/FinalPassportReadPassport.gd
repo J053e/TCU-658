@@ -161,6 +161,7 @@ func _build_ui() -> void:
 
 	continue_button = Button.new()
 	continue_button.text = "Continue"
+	continue_button.visible = false
 	continue_button.disabled = true
 	GameState.style_menu_button(continue_button, "yellow")
 	continue_button.pressed.connect(_on_continue_pressed)
@@ -168,6 +169,7 @@ func _build_ui() -> void:
 
 	back_button = Button.new()
 	back_button.text = "Back"
+	back_button.focus_mode = Control.FOCUS_NONE
 	GameState.style_menu_button(back_button, "orange")
 	back_button.pressed.connect(_on_back_pressed)
 	actions.add_child(back_button)
@@ -230,7 +232,7 @@ func _start_new_attempt() -> void:
 	finished = false
 	attempt_issues.clear()
 	continue_button.text = "Continue"
-	continue_button.visible = true
+	continue_button.visible = false
 	continue_button.disabled = true
 	repeat_button.visible = false
 	status_label.visible = false
@@ -261,6 +263,7 @@ func _resolve_text(raw_text: String) -> String:
 	out = out.replace("[AGE]", _profile_age())
 	out = out.replace("[COUNTRY]", _profile_country())
 	out = out.replace("[TOWN]", _profile_town())
+	out = out.replace("[GRADE]", _profile_grade())
 	return out
 
 func _profile_name() -> String:
@@ -297,6 +300,13 @@ func _profile_town() -> String:
 		return from_prereq
 	var value := String(GameState.profile.get("province", "")).strip_edges()
 	return value if value != "" else "Cartago"
+
+func _profile_grade() -> String:
+	var from_prereq := String(prereq_passport_values.get("passport_grade", "")).strip_edges()
+	if from_prereq != "":
+		return from_prereq.to_lower()
+	var value := String(GameState.profile.get("grade", "")).strip_edges()
+	return value.to_lower() if value != "" else "seventh"
 
 func _build_answer_buttons() -> void:
 	for child in answers_box.get_children():
@@ -498,6 +508,7 @@ func _show_summary(result: Dictionary) -> void:
 	if attempts > 1:
 		feedback_label.text += "\nAttempts: " + str(attempts)
 
+	continue_button.visible = true
 	continue_button.text = "Back to Zone"
 	continue_button.disabled = false
 	repeat_button.visible = true

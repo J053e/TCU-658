@@ -298,9 +298,9 @@ func _show_situation() -> void:
 
 	answered_current = false
 	screen_title_label.visible = true
+	continue_button.visible = false
 	continue_button.disabled = true
 	continue_button.text = "Continue"
-	continue_button.visible = true
 	check_button.disabled = false
 	check_button.visible = true
 	repeat_button.visible = false
@@ -483,6 +483,7 @@ func _show_summary(result: Dictionary) -> void:
 	if attempts > 1:
 		feedback_label.text += " Attempts: " + str(attempts)
 
+	continue_button.visible = true
 	continue_button.text = "Back to Zone"
 	continue_button.disabled = false
 	repeat_button.visible = true
