@@ -21,6 +21,10 @@ var badge_slots := {}
 var badge_gray_material: ShaderMaterial
 
 func _ready() -> void:
+	if GameState.all_zones_completed():
+		GameState.play_victory_music()
+	else:
+		GameState.play_zone_music()
 	_build_ui()
 	_render_summary()
 	_update_badges()

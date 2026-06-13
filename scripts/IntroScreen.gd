@@ -10,6 +10,7 @@ const INTRO_BADGE_ORDER := [
 ]
 
 func _ready() -> void:
+	GameState.play_zone_music()
 	_build_ui()
 	GameState.play_enter_transition(self)
 

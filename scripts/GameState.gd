@@ -5,6 +5,16 @@ const CONTENT_PATH := "res://data/game_content.json"
 const BACKGROUND_MANIFEST_PATH := "res://data/backgrounds_manifest.json"
 const GLOBAL_ICONS_DIR := "res://assets/branding/global_icons"
 const CLICK_SFX_PATH := "res://assets/audio/sfx/ui_click.wav"
+const ANSWER_CORRECT_SFX_PATH := "res://assets/audio/sfx/answer_correct.wav"
+const ANSWER_INCORRECT_SFX_PATH := "res://assets/audio/sfx/answer_incorrect.wav"
+const MENU_MUSIC_PATH := "res://assets/audio/music/menu_theme.ogg"
+const ZONE_MUSIC_PATH := "res://assets/audio/music/zone_theme.ogg"
+const VICTORY_FANFARE_PATH := "res://assets/audio/music/victory_fanfare.ogg"
+const MUSIC_CONTEXT_MENU := "menu"
+const MUSIC_CONTEXT_ZONE := "zone"
+const MUSIC_CONTEXT_VICTORY := "victory"
+const DEFAULT_MUSIC_VOLUME := 0.20
+const DEFAULT_SFX_VOLUME := 0.56
 const ZONE_BADGE_PATHS := {
 	"school_gate": "res://assets/ui/badges/medal_01.png",
 	"classroom_survival": "res://assets/ui/badges/medal_02.png",
@@ -41,6 +51,19 @@ var profile_setup_done: bool = false
 var challenge_results: Dictionary = {}
 var pending_badge_popups: Dictionary = {}
 var ui_click_player: AudioStreamPlayer
+var answer_sfx_player: AudioStreamPlayer
+var music_player: AudioStreamPlayer
+var fanfare_player: AudioStreamPlayer
+var answer_correct_stream: AudioStream
+var answer_incorrect_stream: AudioStream
+var menu_music_stream: AudioStream
+var zone_music_stream: AudioStream
+var victory_fanfare_stream: AudioStream
+var current_music_context := ""
+var pending_music_after_fanfare := ""
+var music_volume_linear := DEFAULT_MUSIC_VOLUME
+var sfx_volume_linear := DEFAULT_SFX_VOLUME
+var audio_settings_layer: CanvasLayer
 var pretty_font: SystemFont
 var background_manifest: Dictionary = {}
 var is_scene_transitioning: bool = false
@@ -52,6 +75,9 @@ func _ready() -> void:
 	load_progress()
 	_initialize_fonts()
 	_initialize_ui_sfx()
+	_initialize_answer_sfx()
+	_initialize_music()
+	call_deferred("apply_music_for_current_scene")
 
 func load_background_manifest() -> void:
 	background_manifest.clear()
@@ -76,10 +102,245 @@ func _initialize_fonts() -> void:
 func _initialize_ui_sfx() -> void:
 	ui_click_player = AudioStreamPlayer.new()
 	ui_click_player.name = "UIClickPlayer"
-	ui_click_player.volume_db = -8.0
 	if ResourceLoader.exists(CLICK_SFX_PATH):
 		ui_click_player.stream = load(CLICK_SFX_PATH)
 	add_child(ui_click_player)
+	_apply_sfx_volume()
+
+func _initialize_answer_sfx() -> void:
+	answer_sfx_player = AudioStreamPlayer.new()
+	answer_sfx_player.name = "AnswerSFXPlayer"
+	add_child(answer_sfx_player)
+
+	answer_correct_stream = _load_audio_stream(ANSWER_CORRECT_SFX_PATH, false)
+	answer_incorrect_stream = _load_audio_stream(ANSWER_INCORRECT_SFX_PATH, false)
+	_apply_sfx_volume()
+
+func _initialize_music() -> void:
+	music_player = AudioStreamPlayer.new()
+	music_player.name = "MusicPlayer"
+	add_child(music_player)
+
+	fanfare_player = AudioStreamPlayer.new()
+	fanfare_player.name = "VictoryFanfarePlayer"
+	fanfare_player.finished.connect(_on_victory_fanfare_finished)
+	add_child(fanfare_player)
+
+	menu_music_stream = _load_audio_stream(MENU_MUSIC_PATH, true)
+	zone_music_stream = _load_audio_stream(ZONE_MUSIC_PATH, true)
+	victory_fanfare_stream = _load_audio_stream(VICTORY_FANFARE_PATH, false)
+	_apply_music_volume()
+
+func play_answer_sfx(is_correct: bool) -> void:
+	if answer_sfx_player == null:
+		return
+	var selected_stream: AudioStream = answer_correct_stream if is_correct else answer_incorrect_stream
+	if selected_stream == null:
+		return
+	answer_sfx_player.stop()
+	answer_sfx_player.stream = selected_stream
+	answer_sfx_player.play()
+
+func set_music_volume(value: float, persist: bool = true) -> void:
+	music_volume_linear = clampf(value, 0.0, 1.0)
+	_apply_music_volume()
+	if persist:
+		save_progress()
+
+func set_sfx_volume(value: float, persist: bool = true) -> void:
+	sfx_volume_linear = clampf(value, 0.0, 1.0)
+	_apply_sfx_volume()
+	if persist:
+		save_progress()
+
+func _apply_music_volume() -> void:
+	var volume_db := _linear_volume_to_db(music_volume_linear)
+	if music_player != null:
+		music_player.volume_db = volume_db
+	if fanfare_player != null:
+		fanfare_player.volume_db = volume_db
+
+func _apply_sfx_volume() -> void:
+	var volume_db := _linear_volume_to_db(sfx_volume_linear)
+	if ui_click_player != null:
+		ui_click_player.volume_db = volume_db
+	if answer_sfx_player != null:
+		answer_sfx_player.volume_db = volume_db
+
+func _linear_volume_to_db(value: float) -> float:
+	if value <= 0.001:
+		return -80.0
+	return linear_to_db(value)
+
+func play_menu_music() -> void:
+	if current_music_context == MUSIC_CONTEXT_VICTORY and fanfare_player != null and fanfare_player.playing:
+		pending_music_after_fanfare = MUSIC_CONTEXT_MENU
+		return
+	_play_loop_music(MUSIC_CONTEXT_MENU, menu_music_stream)
+
+func play_zone_music() -> void:
+	pending_music_after_fanfare = ""
+	if fanfare_player != null:
+		fanfare_player.stop()
+	_play_loop_music(MUSIC_CONTEXT_ZONE, zone_music_stream)
+
+func play_victory_music() -> void:
+	if current_music_context == MUSIC_CONTEXT_VICTORY and fanfare_player != null and fanfare_player.playing:
+		return
+	current_music_context = MUSIC_CONTEXT_VICTORY
+	pending_music_after_fanfare = MUSIC_CONTEXT_MENU
+	if music_player != null:
+		music_player.stop()
+	if victory_fanfare_stream == null:
+		current_music_context = ""
+		play_menu_music()
+		return
+	fanfare_player.stop()
+	fanfare_player.stream = victory_fanfare_stream
+	fanfare_player.play()
+
+func apply_music_for_current_scene() -> void:
+	var current := get_tree().current_scene
+	if current == null:
+		return
+	apply_music_for_scene(current.scene_file_path)
+
+func apply_music_for_scene(scene_path: String) -> void:
+	var scene_file := scene_path.get_file()
+	if scene_file == "MainMenu.tscn":
+		play_menu_music()
+	elif scene_file == "FinalScreen.tscn":
+		if all_zones_completed():
+			play_victory_music()
+		else:
+			play_zone_music()
+	else:
+		play_zone_music()
+
+func _play_loop_music(context: String, stream: AudioStream) -> void:
+	if music_player == null:
+		return
+	if current_music_context == context and music_player.playing:
+		return
+	if stream == null:
+		current_music_context = ""
+		music_player.stop()
+		return
+	current_music_context = context
+	music_player.stop()
+	music_player.stream = stream
+	music_player.play()
+
+func _on_victory_fanfare_finished() -> void:
+	if pending_music_after_fanfare == MUSIC_CONTEXT_MENU:
+		pending_music_after_fanfare = ""
+		current_music_context = ""
+		play_menu_music()
+
+func _load_audio_stream(path: String, loop_stream: bool) -> AudioStream:
+	var stream: AudioStream = null
+	var bytes := PackedByteArray()
+
+	if FileAccess.file_exists(path):
+		bytes = FileAccess.get_file_as_bytes(path)
+		if _is_mp3_data(bytes):
+			stream = AudioStreamMP3.load_from_buffer(bytes)
+
+	if stream == null and ResourceLoader.exists(path):
+		var loaded := load(path)
+		if loaded is AudioStream:
+			stream = loaded
+
+	if stream == null and not bytes.is_empty():
+		if _is_ogg_data(bytes):
+			stream = AudioStreamOggVorbis.load_from_buffer(bytes)
+		elif _is_wav_data(bytes):
+			stream = _load_wav_from_bytes(bytes)
+
+	_configure_stream_loop(stream, loop_stream)
+	return stream
+
+func _configure_stream_loop(stream: AudioStream, loop_stream: bool) -> void:
+	if stream is AudioStreamOggVorbis:
+		(stream as AudioStreamOggVorbis).loop = loop_stream
+	elif stream is AudioStreamMP3:
+		(stream as AudioStreamMP3).loop = loop_stream
+	elif stream is AudioStreamWAV:
+		(stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_DISABLED
+
+func _is_mp3_data(bytes: PackedByteArray) -> bool:
+	if bytes.size() < 3:
+		return false
+	var header := _read_ascii(bytes, 0, 3)
+	return header == "ID3" or (bytes[0] == 0xFF and (bytes[1] & 0xE0) == 0xE0)
+
+func _is_ogg_data(bytes: PackedByteArray) -> bool:
+	return bytes.size() >= 4 and _read_ascii(bytes, 0, 4) == "OggS"
+
+func _is_wav_data(bytes: PackedByteArray) -> bool:
+	return bytes.size() >= 12 and _read_ascii(bytes, 0, 4) == "RIFF" and _read_ascii(bytes, 8, 4) == "WAVE"
+
+func _load_wav_from_bytes(bytes: PackedByteArray) -> AudioStreamWAV:
+	if not _is_wav_data(bytes):
+		return null
+
+	var audio_format := 0
+	var channels := 1
+	var sample_rate := 44100
+	var bits_per_sample := 16
+	var data := PackedByteArray()
+	var has_fmt := false
+	var offset := 12
+
+	while offset + 8 <= bytes.size():
+		var chunk_id := _read_ascii(bytes, offset, 4)
+		var chunk_size := _read_u32_le(bytes, offset + 4)
+		var chunk_start := offset + 8
+		var chunk_end := mini(chunk_start + chunk_size, bytes.size())
+
+		if chunk_id == "fmt " and chunk_size >= 16:
+			audio_format = _read_u16_le(bytes, chunk_start)
+			channels = _read_u16_le(bytes, chunk_start + 2)
+			sample_rate = _read_u32_le(bytes, chunk_start + 4)
+			bits_per_sample = _read_u16_le(bytes, chunk_start + 14)
+			has_fmt = true
+		elif chunk_id == "data":
+			data = bytes.slice(chunk_start, chunk_end)
+
+		offset = chunk_end + int(chunk_size % 2)
+
+	if not has_fmt or data.is_empty() or audio_format != 1:
+		return null
+
+	var wav := AudioStreamWAV.new()
+	wav.mix_rate = sample_rate
+	wav.stereo = channels > 1
+	if bits_per_sample == 8:
+		wav.format = AudioStreamWAV.FORMAT_8_BITS
+	elif bits_per_sample == 16:
+		wav.format = AudioStreamWAV.FORMAT_16_BITS
+	else:
+		return null
+	wav.data = data
+	return wav
+
+func _read_ascii(bytes: PackedByteArray, offset: int, length: int) -> String:
+	var text := ""
+	for i in range(length):
+		if offset + i >= bytes.size():
+			break
+		text += char(bytes[offset + i])
+	return text
+
+func _read_u16_le(bytes: PackedByteArray, offset: int) -> int:
+	if offset + 1 >= bytes.size():
+		return 0
+	return int(bytes[offset]) | (int(bytes[offset + 1]) << 8)
+
+func _read_u32_le(bytes: PackedByteArray, offset: int) -> int:
+	if offset + 3 >= bytes.size():
+		return 0
+	return int(bytes[offset]) | (int(bytes[offset + 1]) << 8) | (int(bytes[offset + 2]) << 16) | (int(bytes[offset + 3]) << 24)
 
 func load_content() -> void:
 	if not FileAccess.file_exists(CONTENT_PATH):
@@ -153,7 +414,9 @@ func save_progress() -> void:
 		"profile": profile,
 		"profile_setup_done": profile_setup_done,
 		"challenge_results": challenge_results,
-		"pending_badge_popups": pending_badge_popups
+		"pending_badge_popups": pending_badge_popups,
+		"music_volume": music_volume_linear,
+		"sfx_volume": sfx_volume_linear
 	}
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -191,6 +454,10 @@ func load_progress() -> void:
 		challenge_results = payload_dict["challenge_results"].duplicate(true)
 	if payload_dict.has("pending_badge_popups") and typeof(payload_dict["pending_badge_popups"]) == TYPE_DICTIONARY:
 		pending_badge_popups = payload_dict["pending_badge_popups"].duplicate(true)
+	if payload_dict.has("music_volume"):
+		music_volume_linear = clampf(float(payload_dict["music_volume"]), 0.0, 1.0)
+	if payload_dict.has("sfx_volume"):
+		sfx_volume_linear = clampf(float(payload_dict["sfx_volume"]), 0.0, 1.0)
 
 func has_challenge_result(challenge_id: String) -> bool:
 	var result := get_challenge_result(challenge_id)
@@ -332,6 +599,9 @@ func show_badge_popup_or_continue(root: Control, zone_id: String, on_continue: C
 		consume_badge_popup(zone_id)
 		if is_instance_valid(layer):
 			layer.queue_free()
+		if all_zones_completed():
+			change_scene_with_transition("res://scenes/FinalScreen.tscn")
+			return
 		if on_continue.is_valid():
 			on_continue.call()
 	)
@@ -341,6 +611,7 @@ func show_answer_feedback_popup(root: Control, feedback_text: String, is_correct
 		if on_continue.is_valid():
 			on_continue.call()
 		return
+	play_answer_sfx(is_correct)
 
 	var layer := CanvasLayer.new()
 	layer.layer = 290
@@ -376,7 +647,7 @@ func show_answer_feedback_popup(root: Control, feedback_text: String, is_correct
 	margin.add_child(content_box)
 
 	var icon := Label.new()
-	icon.text = "✓" if is_correct else "X"
+	icon.text = "\u2713" if is_correct else "X"
 	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	icon.add_theme_font_override("font", pretty_font)
 	icon.add_theme_font_size_override("font_size", 74)
@@ -448,16 +719,44 @@ func decorate_screen(root: Control, background_path: String = "") -> void:
 func _add_background(root: Control, background_path: String) -> void:
 	if background_path == "" or not ResourceLoader.exists(background_path):
 		return
+	var texture: Texture2D = load(background_path)
+	if texture == null:
+		return
 	var bg := TextureRect.new()
 	bg.name = "Background"
 	bg.layout_mode = 1
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bg.texture = load(background_path)
+	bg.texture = texture
+	if root.scene_file_path.get_file() == "MainMenu.tscn":
+		bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		bg.stretch_mode = TextureRect.STRETCH_SCALE
+		_fit_cover_background(bg, texture, root)
+		root.resized.connect(func() -> void:
+			_fit_cover_background(bg, texture, root)
+		)
+		call_deferred("_fit_cover_background", bg, texture, root)
+	else:
+		bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		bg.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	root.add_child(bg)
 	root.move_child(bg, 0)
+
+func _fit_cover_background(bg: TextureRect, texture: Texture2D, root: Control) -> void:
+	if bg == null or texture == null or root == null:
+		return
+	if not is_instance_valid(bg) or not is_instance_valid(root):
+		return
+	var target_size := root.size
+	if target_size.x <= 0.0 or target_size.y <= 0.0:
+		target_size = get_viewport().get_visible_rect().size
+	var texture_size := texture.get_size()
+	if texture_size.x <= 0.0 or texture_size.y <= 0.0 or target_size.x <= 0.0 or target_size.y <= 0.0:
+		return
+	var scale := maxf(target_size.x / texture_size.x, target_size.y / texture_size.y)
+	var scaled_size := Vector2(ceil(texture_size.x * scale) + 2.0, ceil(texture_size.y * scale) + 2.0)
+	bg.position = ((target_size - scaled_size) * 0.5).floor()
+	bg.size = scaled_size
 
 func _add_global_icons(root: Control) -> void:
 	var overlay := Control.new()
@@ -470,12 +769,14 @@ func _add_global_icons(root: Control) -> void:
 	icon_box.name = "GlobalIcons"
 	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	icon_box.add_theme_constant_override("separation", 10)
+	var is_main_menu := root.scene_file_path.get_file() == "MainMenu.tscn"
+	var icon_margin := 22 if is_main_menu else 12
 	icon_box.anchor_left = 0.0
 	icon_box.anchor_right = 0.0
-	icon_box.offset_left = 12
-	icon_box.offset_top = 12
-	icon_box.offset_right = 332
-	icon_box.offset_bottom = 96
+	icon_box.offset_left = icon_margin
+	icon_box.offset_top = icon_margin
+	icon_box.offset_right = icon_margin + 320
+	icon_box.offset_bottom = icon_margin + 84
 	overlay.add_child(icon_box)
 
 	var icon_paths := [
@@ -500,6 +801,171 @@ func _add_global_icons(root: Control) -> void:
 		rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		icon_box.add_child(rect)
+
+	_add_audio_settings_button(root, overlay)
+
+func _add_audio_settings_button(root: Control, _overlay: Control) -> void:
+	var layer := CanvasLayer.new()
+	layer.name = "AudioSettingsButtonLayer"
+	layer.layer = 240
+	root.add_child(layer)
+
+	var holder := Control.new()
+	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(holder)
+
+	var audio_button := Button.new()
+	audio_button.name = "AudioSettingsButton"
+	audio_button.text = "\u266A"
+	audio_button.tooltip_text = "Audio settings"
+	audio_button.anchor_left = 1.0
+	audio_button.anchor_right = 1.0
+	audio_button.anchor_top = 0.0
+	audio_button.anchor_bottom = 0.0
+	audio_button.offset_left = -74
+	audio_button.offset_top = 18
+	audio_button.offset_right = -18
+	audio_button.offset_bottom = 74
+	audio_button.custom_minimum_size = Vector2(56, 56)
+	audio_button.focus_mode = Control.FOCUS_NONE
+	audio_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	audio_button.add_theme_font_override("font", pretty_font)
+	audio_button.add_theme_font_size_override("font_size", 32)
+	audio_button.add_theme_color_override("font_color", Color(1, 1, 1))
+	audio_button.add_theme_stylebox_override("normal", _round_audio_button_style(Color(0.08, 0.13, 0.28, 0.88)))
+	audio_button.add_theme_stylebox_override("hover", _round_audio_button_style(Color(0.15, 0.22, 0.42, 0.94)))
+	audio_button.add_theme_stylebox_override("pressed", _round_audio_button_style(Color(0.05, 0.09, 0.20, 0.98)))
+	audio_button.pressed.connect(func() -> void:
+		_on_menu_button_pressed()
+		show_audio_settings_popup(root)
+	)
+	holder.add_child(audio_button)
+
+func _round_audio_button_style(fill_color: Color) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = fill_color
+	sb.border_color = Color(0.78, 0.90, 1.0, 0.95)
+	sb.set_border_width_all(3)
+	sb.corner_radius_top_left = 28
+	sb.corner_radius_top_right = 28
+	sb.corner_radius_bottom_right = 28
+	sb.corner_radius_bottom_left = 28
+	sb.shadow_color = Color(0, 0, 0, 0.30)
+	sb.shadow_size = 5
+	sb.shadow_offset = Vector2(0, 2)
+	sb.set_content_margin_all(6)
+	return sb
+
+func show_audio_settings_popup(root: Control) -> void:
+	if root == null or not is_instance_valid(root):
+		return
+	if audio_settings_layer != null and is_instance_valid(audio_settings_layer):
+		audio_settings_layer.queue_free()
+
+	var layer := CanvasLayer.new()
+	layer.layer = 320
+	audio_settings_layer = layer
+	root.add_child(layer)
+
+	var dim := ColorRect.new()
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.color = Color(0, 0, 0, 0.45)
+	layer.add_child(dim)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(center)
+
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(560, 330)
+	panel.add_theme_stylebox_override("panel", _audio_settings_panel_style())
+	center.add_child(panel)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 28)
+	margin.add_theme_constant_override("margin_top", 24)
+	margin.add_theme_constant_override("margin_right", 28)
+	margin.add_theme_constant_override("margin_bottom", 24)
+	panel.add_child(margin)
+
+	var content := VBoxContainer.new()
+	content.alignment = BoxContainer.ALIGNMENT_CENTER
+	content.add_theme_constant_override("separation", 18)
+	margin.add_child(content)
+
+	var title := Label.new()
+	title.text = "Audio Settings"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	style_label(title, 34, true)
+	content.add_child(title)
+
+	_add_volume_slider(content, "Music Volume", music_volume_linear, func(value: float) -> void:
+		set_music_volume(value, false)
+	)
+	_add_volume_slider(content, "Effects Volume", sfx_volume_linear, func(value: float) -> void:
+		set_sfx_volume(value, false)
+	)
+
+	var close_button := Button.new()
+	close_button.text = "Close"
+	close_button.custom_minimum_size = Vector2(220, 62)
+	style_menu_button(close_button, "orange")
+	content.add_child(close_button)
+
+	close_button.pressed.connect(func() -> void:
+		save_progress()
+		if audio_settings_layer != null and is_instance_valid(audio_settings_layer):
+			audio_settings_layer.queue_free()
+		audio_settings_layer = null
+	)
+
+func _add_volume_slider(container: VBoxContainer, title_text: String, value: float, on_value_changed: Callable) -> void:
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 12)
+	container.add_child(row)
+
+	var label := Label.new()
+	label.text = title_text
+	label.custom_minimum_size = Vector2(175, 32)
+	style_label(label, 22, false)
+	row.add_child(label)
+
+	var slider := HSlider.new()
+	slider.min_value = 0.0
+	slider.max_value = 1.0
+	slider.step = 0.01
+	slider.value = value
+	slider.custom_minimum_size = Vector2(210, 32)
+	row.add_child(slider)
+
+	var value_label := Label.new()
+	value_label.text = "%d%%" % roundi(value * 100.0)
+	value_label.custom_minimum_size = Vector2(70, 32)
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	style_label(value_label, 20, false)
+	row.add_child(value_label)
+
+	slider.value_changed.connect(func(new_value: float) -> void:
+		value_label.text = "%d%%" % roundi(new_value * 100.0)
+		if on_value_changed.is_valid():
+			on_value_changed.call(new_value)
+	)
+
+func _audio_settings_panel_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.06, 0.10, 0.23, 0.97)
+	sb.border_color = Color(0.78, 0.90, 1.0, 0.95)
+	sb.set_border_width_all(3)
+	sb.corner_radius_top_left = 18
+	sb.corner_radius_top_right = 18
+	sb.corner_radius_bottom_right = 18
+	sb.corner_radius_bottom_left = 18
+	sb.shadow_color = Color(0, 0, 0, 0.38)
+	sb.shadow_size = 10
+	sb.shadow_offset = Vector2(0, 3)
+	return sb
 
 func _fit_icon_size(original: Vector2, max_width: float, max_height: float) -> Vector2:
 	if original.x <= 0.0 or original.y <= 0.0:
@@ -659,6 +1125,7 @@ func change_scene_with_transition(scene_path: String, is_back: bool = false) -> 
 			overlay_layer.queue_free()
 		is_scene_transitioning = false
 		return
+	apply_music_for_scene(scene_path)
 
 	if overlay_rect != null and is_instance_valid(overlay_rect):
 		await get_tree().process_frame

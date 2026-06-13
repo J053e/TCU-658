@@ -3,9 +3,10 @@ extends Control
 const MENU_BG_PATH := "res://assets/ui/backgrounds/main_menu_bg.png"
 
 func _ready() -> void:
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	GameState.play_menu_music()
 	_build_ui()
 	GameState.load_progress()
-	GameState.play_enter_transition(self)
 
 func _build_ui() -> void:
 	GameState.decorate_screen(self, MENU_BG_PATH)

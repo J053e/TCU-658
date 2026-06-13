@@ -1,6 +1,5 @@
 extends Control
 
-var final_screen_button: Button
 var zone_buttons := {}
 var badge_slots := {}
 var badge_gray_material: ShaderMaterial
@@ -28,6 +27,7 @@ const BADGE_PATHS := {
 }
 
 func _ready() -> void:
+	GameState.play_zone_music()
 	_build_ui()
 	GameState.load_progress()
 	_refresh()
@@ -65,6 +65,8 @@ func _build_ui() -> void:
 
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 12)
+	actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root_vbox.add_child(actions)
 
 	var save_button := Button.new()
@@ -72,12 +74,6 @@ func _build_ui() -> void:
 	GameState.style_menu_button(save_button, "yellow")
 	save_button.pressed.connect(_on_SaveButton_pressed)
 	actions.add_child(save_button)
-
-	final_screen_button = Button.new()
-	final_screen_button.text = "Final Screen"
-	GameState.style_menu_button(final_screen_button, "green")
-	final_screen_button.pressed.connect(_on_FinalScreenButton_pressed)
-	actions.add_child(final_screen_button)
 
 	var back_button := Button.new()
 	back_button.text = "Back"
@@ -99,7 +95,6 @@ func _add_zone_button(container: VBoxContainer, zone_id: String, label: String) 
 	}
 
 func _refresh() -> void:
-	final_screen_button.disabled = not GameState.all_zones_completed()
 	_update_button_labels()
 	_update_badges()
 
@@ -181,9 +176,6 @@ func _on_zone_pressed(zone_id: String) -> void:
 func _on_SaveButton_pressed() -> void:
 	GameState.save_progress()
 	_refresh()
-
-func _on_FinalScreenButton_pressed() -> void:
-	GameState.change_scene_with_transition("res://scenes/FinalScreen.tscn")
 
 func _on_BackButton_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/MainMenu.tscn", true)
