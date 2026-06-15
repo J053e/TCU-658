@@ -265,15 +265,7 @@ func _load_data() -> void:
 	correct_order.clear()
 	total_slots = 7
 	pass_ratio = 0.70
-	if not FileAccess.file_exists(DATA_PATH):
-		return
-	var file := FileAccess.open(DATA_PATH, FileAccess.READ)
-	if file == null:
-		return
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return
-	intro_data = parsed as Dictionary
+	intro_data = GameState.load_json_data(DATA_PATH)
 	total_slots = maxi(int(intro_data.get("total_slots", 7)), 1)
 	pass_ratio = clampf(float(intro_data.get("pass_ratio", 0.70)), 0.0, 1.0)
 

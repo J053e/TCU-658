@@ -71,17 +71,11 @@ func _build_ui() -> void:
 	actions.alignment = BoxContainer.ALIGNMENT_CENTER
 	root_vbox.add_child(actions)
 
-	var play_again := Button.new()
-	play_again.text = "Play Again"
-	GameState.style_menu_button(play_again, "green")
-	play_again.pressed.connect(_on_PlayAgainButton_pressed)
-	actions.add_child(play_again)
-
-	var main_menu := Button.new()
-	main_menu.text = "Main Menu"
-	GameState.style_menu_button(main_menu, "purple")
-	main_menu.pressed.connect(_on_BackToMenuButton_pressed)
-	actions.add_child(main_menu)
+	var credits_button := Button.new()
+	credits_button.text = "Credits"
+	GameState.style_menu_button(credits_button, "purple")
+	credits_button.pressed.connect(_on_CreditsButton_pressed)
+	actions.add_child(credits_button)
 
 func _render_summary() -> void:
 	if GameState.all_zones_completed():
@@ -153,9 +147,5 @@ func _gray_material() -> ShaderMaterial:
 	badge_gray_material = mat
 	return badge_gray_material
 
-func _on_PlayAgainButton_pressed() -> void:
-	GameState.reset_progress()
-	GameState.change_scene_with_transition("res://scenes/WorldMap.tscn")
-
-func _on_BackToMenuButton_pressed() -> void:
-	GameState.change_scene_with_transition("res://scenes/MainMenu.tscn", true)
+func _on_CreditsButton_pressed() -> void:
+	GameState.change_scene_with_transition("res://scenes/CreditsScreen.tscn")

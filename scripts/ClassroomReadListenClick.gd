@@ -200,15 +200,7 @@ func _on_option_hover(button: Button, entered: bool) -> void:
 	_apply_option_style(button, entered)
 
 func _load_data() -> void:
-	if not FileAccess.file_exists(DATA_PATH):
-		return
-	var f := FileAccess.open(DATA_PATH, FileAccess.READ)
-	if f == null:
-		return
-	var parsed: Variant = JSON.parse_string(f.get_as_text())
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return
-	quiz_data = parsed as Dictionary
+	quiz_data = GameState.load_json_data(DATA_PATH)
 	questions = quiz_data.get("questions", [])
 
 func _show_question() -> void:
@@ -405,47 +397,10 @@ func _play_current_question_audio() -> void:
 		DisplayServer.tts_speak(String(q.get("instruction", "")), tts_voice_id)
 
 func _load_question_audio_stream(audio_path: String) -> AudioStream:
-	if audio_path == "":
-		return null
-
-	for candidate: String in _audio_path_candidates(audio_path):
-		if FileAccess.file_exists(candidate):
-			var bytes := FileAccess.get_file_as_bytes(candidate)
-			if _is_mp3_data(bytes):
-				var mp3 := AudioStreamMP3.new()
-				mp3.data = bytes
-				return mp3
-			if _is_ogg_data(bytes):
-				return AudioStreamOggVorbis.load_from_buffer(bytes)
-
-		if ResourceLoader.exists(candidate):
-			var imported := load(candidate)
-			if imported is AudioStream:
-				return imported
-
-	return null
-
-func _audio_path_candidates(audio_path: String) -> Array[String]:
-	var candidates: Array[String] = [audio_path]
-	var base := audio_path.get_basename()
-	for extension: String in [".ogg", ".mp3"]:
-		var candidate: String = base + extension
-		if not candidates.has(candidate):
-			candidates.append(candidate)
-	return candidates
-
-func _is_mp3_data(bytes: PackedByteArray) -> bool:
-	if bytes.size() >= 3 and bytes[0] == 0x49 and bytes[1] == 0x44 and bytes[2] == 0x33:
-		return true
-	return bytes.size() >= 2 and bytes[0] == 0xFF and (bytes[1] & 0xE0) == 0xE0
-
-func _is_ogg_data(bytes: PackedByteArray) -> bool:
-	return bytes.size() >= 4 and bytes[0] == 0x4F and bytes[1] == 0x67 and bytes[2] == 0x67 and bytes[3] == 0x53
+	return GameState.load_audio_resource(audio_path)
 
 func _load_fitted_icon(path: String, max_size: Vector2i) -> Texture2D:
-	if path == "" or not ResourceLoader.exists(path):
-		return null
-	var tex: Texture2D = load(path)
+	var tex := GameState.load_texture_resource(path)
 	if tex == null:
 		return null
 	var img := tex.get_image()

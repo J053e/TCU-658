@@ -150,15 +150,7 @@ func _build_ui() -> void:
 func _load_challenge_data() -> void:
 	objects.clear()
 	challenge_data.clear()
-	if not FileAccess.file_exists(DATA_PATH):
-		return
-	var file := FileAccess.open(DATA_PATH, FileAccess.READ)
-	if file == null:
-		return
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return
-	challenge_data = parsed as Dictionary
+	challenge_data = GameState.load_json_data(DATA_PATH)
 	objects = challenge_data.get("objects", [])
 
 func _start_new_attempt() -> void:
@@ -204,10 +196,7 @@ func _show_current_object() -> void:
 	feedback_label.text = ""
 
 	var image_path := String(current.get("image", ""))
-	if image_path != "" and ResourceLoader.exists(image_path):
-		object_image.texture = load(image_path)
-	else:
-		object_image.texture = null
+	object_image.texture = GameState.load_texture_resource(image_path)
 
 	answer_input.text = ""
 	answer_input.editable = true

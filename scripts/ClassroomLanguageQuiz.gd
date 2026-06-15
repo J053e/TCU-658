@@ -141,15 +141,7 @@ func _build_ui() -> void:
 	actions.add_child(result_status_label)
 
 func _load_quiz_data() -> void:
-	if not FileAccess.file_exists(QUIZ_DATA_PATH):
-		return
-	var file := FileAccess.open(QUIZ_DATA_PATH, FileAccess.READ)
-	if file == null:
-		return
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return
-	quiz_data = parsed as Dictionary
+	quiz_data = GameState.load_json_data(QUIZ_DATA_PATH)
 	questions = quiz_data.get("questions", [])
 
 func _show_question() -> void:
@@ -185,10 +177,7 @@ func _show_question() -> void:
 	bottom_spacer.custom_minimum_size = Vector2(0, 0)
 
 	var img_path: String = String(q.get("image", ""))
-	if img_path != "" and ResourceLoader.exists(img_path):
-		situation_image.texture = load(img_path)
-	else:
-		situation_image.texture = null
+	situation_image.texture = GameState.load_texture_resource(img_path)
 
 	var options: Array = q.get("options", [])
 	for i in range(option_buttons.size()):

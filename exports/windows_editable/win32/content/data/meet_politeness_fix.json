@@ -1,0 +1,62 @@
+{
+  "instruction": "Choose the option that best completes the mini dialogue.",
+  "situations": [
+    {
+      "id": "polite_01",
+      "prompt_prefix": "Teacher: Here is your notebook.\nYou:",
+      "prompt_suffix": ".",
+      "image": "res://assets/zones/zone_03_meet_classmates/interactive/politeness_fix/questions/situation_01_notebook.png",
+      "options": [
+        "Thank you",
+        "Bye",
+        "Stand up"
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Great manners!",
+      "incorrect_feedback": "Use a polite response when receiving something."
+    },
+    {
+      "id": "polite_02",
+      "prompt_prefix": "You step on a classmate's foot.\nYou:",
+      "prompt_suffix": ".",
+      "image": "res://assets/zones/zone_03_meet_classmates/interactive/politeness_fix/questions/situation_02_sorry.png",
+      "options": [
+        "Sorry",
+        "Hello",
+        "Good morning"
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Correct!",
+      "incorrect_feedback": "Apologize when you hurt someone by accident."
+    },
+    {
+      "id": "polite_03",
+      "prompt_prefix": "You want a pencil.\nYou: Can you lend me a pencil,",
+      "prompt_suffix": "?",
+      "image": "res://assets/zones/zone_03_meet_classmates/interactive/politeness_fix/questions/situation_03_pencil.png",
+      "options": [
+        "please",
+        "goodbye",
+        "teacher"
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Well done!",
+      "incorrect_feedback": "Add a polite word at the end of the request."
+    },
+    {
+      "id": "polite_04",
+      "prompt_prefix": "Classmate: Thank you.\nYou:",
+      "prompt_suffix": ".",
+      "image": "res://assets/zones/zone_03_meet_classmates/interactive/politeness_fix/questions/situation_04_welcome.png",
+      "options": [
+        "You're welcome",
+        "I am fine",
+        "See you tomorrow"
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Excellent!",
+      "incorrect_feedback": "Reply politely when someone says thank you."
+    }
+  ]
+}
+

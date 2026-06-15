@@ -1,0 +1,136 @@
+{
+  "zone_id": "school_gate",
+  "title": "School Gate Challenge",
+  "questions": [
+    {
+      "id": "q01_teacher_morning",
+      "prompt": "It is 7:00 a.m. Your teacher smiles at you.",
+      "options": [
+        "Good morning.",
+        "Goodbye.",
+        "Sorry."
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Great job!",
+      "incorrect_feedback": "Not quite. Try again!",
+      "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q01_teacher_morning.png"
+    },
+    {
+      "id": "q02_student_arrive",
+      "prompt": "A student says hello as you arrive.",
+      "options": [
+        "Good night.",
+        "Hi!",
+        "Thank you."
+      ],
+      "correct_index": 1,
+      "correct_feedback": "Nice!",
+      "incorrect_feedback": "Oops! Check the situation again.",
+      "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q02_student_arrive.png"
+    },
+    {
+      "id": "q03_leaving_gate",
+      "prompt": "You are leaving the school gate after class.",
+      "options": [
+        "Good morning.",
+        "Please.",
+        "Bye!"
+      ],
+      "correct_index": 2,
+      "correct_feedback": "Well done!",
+      "incorrect_feedback": "Remember, you are leaving. Choose a farewell!",
+      "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q03_leaving_gate.png"
+    },
+    {
+      "id": "q04_guard_helps",
+      "prompt": "The security guard helps you open the gate.",
+      "options": [
+        "Thank you.",
+        "Hello!",
+        "Sit down."
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Excellent!",
+      "incorrect_feedback": "Be polite! What do you say when someone helps you?",
+      "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q04_guard_helps.png"
+    },
+    {
+      "id": "q05_late_office",
+      "prompt": "You arrive late and enter the school office.",
+      "options": [
+        "I'm sorry.",
+        "Good afternoon.",
+        "My name is seven."
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Correct! You're doing great.",
+      "incorrect_feedback": "Think about the situation. You need to apologize for being late.",
+      "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q05_late_office.png"
+    },
+    {
+      "id": "q06_teacher_good_morning",
+      "prompt": "Teacher: Good morning!",
+      "options": [
+        "Bye!",
+        "Open your notebook.",
+        "Good morning!"
+      ],
+      "correct_index": 2,
+      "correct_feedback": "Great start!",
+      "incorrect_feedback": "Not quite. Try again!",
+      "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q06_teacher_good_morning.png"
+    },
+    {
+      "id": "q07_student_hi",
+      "prompt": "Student: Hi!",
+      "options": [
+        "Sit down.",
+        "Thank you.",
+        "Hi!"
+      ],
+      "correct_index": 2,
+      "correct_feedback": "Nice! Friendly and simple.",
+      "incorrect_feedback": "Not quite. Try again!",
+      "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q07_student_hi.png"
+    },
+    {
+      "id": "q08_guard_goodbye",
+      "prompt": "Security guard: Goodbye!",
+      "options": [
+        "Good morning!",
+        "Goodbye!",
+        "Please."
+      ],
+      "correct_index": 1,
+      "correct_feedback": "Perfect! You're ready to go.",
+      "incorrect_feedback": "The guard is saying goodbye. How do you say it back?",
+      "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q08_guard_goodbye.png"
+    },
+    {
+      "id": "q09_teacher_thank_you",
+      "prompt": "Teacher: Thank you.",
+      "options": [
+        "You're welcome.",
+        "Good night.",
+        "Raise your hand."
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Excellent! That's very polite.",
+      "incorrect_feedback": "Not quite. Try again!",
+      "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q09_teacher_thank_you.png"
+    },
+    {
+      "id": "q10_classmate_sorry",
+      "prompt": "Classmate: I'm sorry.",
+      "options": [
+        "Good afternoon.",
+        "That's okay.",
+        "Close the door."
+      ],
+      "correct_index": 1,
+      "correct_feedback": "Well done! You are very kind.",
+      "incorrect_feedback": "Your classmate is apologizing. Try again!",
+      "image": "res://assets/zones/zone_01_school_gate/interactive/questions/q10_classmate_sorry.png"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "zone_id": "classroom_survival",
+  "title": "Classroom Language",
+  "questions": [
+    {
+      "id": "cl01",
+      "prompt": "You are outside the classroom.\nWhat do you say?",
+      "image": "res://assets/zones/zone_02_classroom_survival/interactive/classroom_language/options/outside_classroom.png",
+      "options": [
+        "Goodbye!",
+        "May I come in?",
+        "Thank you!"
+      ],
+      "correct_index": 1,
+      "correct_feedback": "Great! That is polite classroom language.",
+      "incorrect_feedback": "Try again: ask permission to enter."
+    },
+    {
+      "id": "cl02",
+      "prompt": "You do not understand the teacher.\nWhat do you say?",
+      "image": "res://assets/zones/zone_02_classroom_survival/interactive/classroom_language/options/dont_understand.png",
+      "options": [
+        "Good night.",
+        "I am twelve years old.",
+        "Can you repeat, please?"
+      ],
+      "correct_index": 2,
+      "correct_feedback": "Excellent!",
+      "incorrect_feedback": "Use a polite request for repetition."
+    },
+    {
+      "id": "cl03",
+      "prompt": "You need help with an assignment.\nWhat do you say?",
+      "image": "res://assets/zones/zone_02_classroom_survival/interactive/classroom_language/options/ask_for_help.png",
+      "options": [
+        "Can you help me, please?",
+        "Bye!",
+        "Open the window."
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Nice job!",
+      "incorrect_feedback": "Ask for help politely."
+    },
+    {
+      "id": "cl04",
+      "prompt": "You want to ask a question.\nWhat do you do first?",
+      "image": "res://assets/zones/zone_02_classroom_survival/interactive/classroom_language/options/raise_hand.png",
+      "options": [
+        "Close the door.",
+        "Go home.",
+        "Raise your hand."
+      ],
+      "correct_index": 2,
+      "correct_feedback": "Correct!",
+      "incorrect_feedback": "First, raise your hand."
+    }
+  ]
+}

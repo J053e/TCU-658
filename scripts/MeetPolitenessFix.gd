@@ -283,15 +283,7 @@ func _bank_chip_style() -> StyleBoxFlat:
 	return sb
 
 func _load_data() -> void:
-	if not FileAccess.file_exists(DATA_PATH):
-		return
-	var file := FileAccess.open(DATA_PATH, FileAccess.READ)
-	if file == null:
-		return
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return
-	quiz_data = parsed as Dictionary
+	quiz_data = GameState.load_json_data(DATA_PATH)
 	situations = quiz_data.get("situations", [])
 
 func _start_new_attempt() -> void:
@@ -550,9 +542,7 @@ func _change_scene_after_popup(scene_path: String, is_back: bool) -> void:
 	GameState.change_scene_with_transition(scene_path, is_back)
 
 func _load_fitted_image(path: String, max_size: Vector2i) -> Texture2D:
-	if path == "" or not ResourceLoader.exists(path):
-		return null
-	var tex: Texture2D = load(path)
+	var tex := GameState.load_texture_resource(path)
 	if tex == null:
 		return null
 	var img := tex.get_image()

@@ -1,0 +1,14 @@
+{
+  "title": "Label the Classroom Objects",
+  "instruction": "Type the correct object name.",
+  "objects": [
+    { "id": "desk", "answer": "desk", "image": "res://assets/zones/zone_04_my_school_card/interactive/label_classroom/objects/desk.png" },
+    { "id": "chair", "answer": "chair", "image": "res://assets/zones/zone_04_my_school_card/interactive/label_classroom/objects/chair.png" },
+    { "id": "board", "answer": "board", "image": "res://assets/zones/zone_04_my_school_card/interactive/label_classroom/objects/board.png" },
+    { "id": "door", "answer": "door", "image": "res://assets/zones/zone_04_my_school_card/interactive/label_classroom/objects/door.png" },
+    { "id": "window", "answer": "window", "image": "res://assets/zones/zone_04_my_school_card/interactive/label_classroom/objects/window.png" },
+    { "id": "notebook", "answer": "notebook", "image": "res://assets/zones/zone_04_my_school_card/interactive/label_classroom/objects/notebook.png" },
+    { "id": "backpack", "answer": "backpack", "image": "res://assets/zones/zone_04_my_school_card/interactive/label_classroom/objects/backpack.png" },
+    { "id": "pencil", "answer": "pencil", "image": "res://assets/zones/zone_04_my_school_card/interactive/label_classroom/objects/pencil.png" }
+  ]
+}

@@ -140,15 +140,7 @@ func _build_ui() -> void:
 func _load_data() -> void:
 	questions.clear()
 	challenge_data.clear()
-	if not FileAccess.file_exists(DATA_PATH):
-		return
-	var file := FileAccess.open(DATA_PATH, FileAccess.READ)
-	if file == null:
-		return
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return
-	challenge_data = parsed as Dictionary
+	challenge_data = GameState.load_json_data(DATA_PATH)
 	questions = challenge_data.get("questions", [])
 
 func _start_new_attempt() -> void:

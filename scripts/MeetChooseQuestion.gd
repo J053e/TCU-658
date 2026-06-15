@@ -269,15 +269,7 @@ func _bank_chip_style() -> StyleBoxFlat:
 	return sb
 
 func _load_data() -> void:
-	if not FileAccess.file_exists(DATA_PATH):
-		return
-	var file := FileAccess.open(DATA_PATH, FileAccess.READ)
-	if file == null:
-		return
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return
-	quiz_data = parsed as Dictionary
+	quiz_data = GameState.load_json_data(DATA_PATH)
 	situations = quiz_data.get("situations", [])
 
 func _start_new_attempt() -> void:

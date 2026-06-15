@@ -212,15 +212,7 @@ func _slot_style() -> StyleBoxFlat:
 	return sb
 
 func _load_data() -> void:
-	if not FileAccess.file_exists(DATA_PATH):
-		return
-	var file := FileAccess.open(DATA_PATH, FileAccess.READ)
-	if file == null:
-		return
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return
-	dialogue_data = parsed as Dictionary
+	dialogue_data = GameState.load_json_data(DATA_PATH)
 	dialogues = dialogue_data.get("dialogues", [])
 
 func _start_new_attempt() -> void:

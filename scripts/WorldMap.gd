@@ -104,7 +104,7 @@ func _update_button_labels() -> void:
 		var zone_meta: Dictionary = zone_buttons[zone_id]
 		var button: Button = zone_meta["button"]
 		var base_label: String = zone_meta["label"]
-		var suffix := " [STAMP]" if GameState.is_zone_completed(zone_id) else ""
+		var suffix := " \u2705" if GameState.is_zone_completed(zone_id) else ""
 		button.text = base_label + suffix
 
 func _add_badges_row(container: VBoxContainer) -> void:

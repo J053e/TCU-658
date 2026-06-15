@@ -3,13 +3,23 @@ extends Node
 const SAVE_PATH := "user://savegame.json"
 const CONTENT_PATH := "res://data/game_content.json"
 const BACKGROUND_MANIFEST_PATH := "res://data/backgrounds_manifest.json"
+const EXTERNAL_CONTENT_FEATURE := "editable_content"
+const EXTERNAL_CONTENT_DIR := "content"
+const EXTERNAL_DATA_FILES := [
+	"school_gate_quiz.json",
+	"classroom_read_listen_click.json",
+	"classroom_language_quiz.json",
+	"meet_choose_question.json",
+	"meet_politeness_fix.json",
+	"my_school_card_label_classroom.json"
+]
 const GLOBAL_ICONS_DIR := "res://assets/branding/global_icons"
 const CLICK_SFX_PATH := "res://assets/audio/sfx/ui_click.wav"
 const ANSWER_CORRECT_SFX_PATH := "res://assets/audio/sfx/answer_correct.wav"
 const ANSWER_INCORRECT_SFX_PATH := "res://assets/audio/sfx/answer_incorrect.wav"
-const MENU_MUSIC_PATH := "res://assets/audio/music/menu_theme.ogg"
-const ZONE_MUSIC_PATH := "res://assets/audio/music/zone_theme.ogg"
-const VICTORY_FANFARE_PATH := "res://assets/audio/music/victory_fanfare.ogg"
+const MENU_MUSIC_PATH := "res://assets/audio/music_raw/menu_theme.audio"
+const ZONE_MUSIC_PATH := "res://assets/audio/music_raw/zone_theme.audio"
+const VICTORY_FANFARE_PATH := "res://assets/audio/music_raw/victory_fanfare.audio"
 const MUSIC_CONTEXT_MENU := "menu"
 const MUSIC_CONTEXT_ZONE := "zone"
 const MUSIC_CONTEXT_VICTORY := "victory"
@@ -78,6 +88,94 @@ func _ready() -> void:
 	_initialize_answer_sfx()
 	_initialize_music()
 	call_deferred("apply_music_for_current_scene")
+
+func load_json_data(res_data_path: String, allow_external_override: bool = true) -> Dictionary:
+	var path := res_data_path
+	if allow_external_override:
+		var external_path := get_external_data_path(res_data_path)
+		if external_path != "" and FileAccess.file_exists(external_path):
+			path = external_path
+
+	if not FileAccess.file_exists(path):
+		push_error("JSON data file not found: " + path)
+		return {}
+
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		push_error("Unable to open JSON data file: " + path)
+		return {}
+
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if typeof(parsed) != TYPE_DICTIONARY:
+		push_error("Invalid JSON data file: " + path)
+		return {}
+
+	return parsed as Dictionary
+
+func get_external_data_path(res_data_path: String) -> String:
+	if not is_external_content_enabled():
+		return ""
+	if not res_data_path.begins_with("res://data/"):
+		return ""
+	var file_name := res_data_path.get_file()
+	if not EXTERNAL_DATA_FILES.has(file_name):
+		return ""
+	return get_external_content_root().path_join("data").path_join(file_name)
+
+func is_external_content_enabled() -> bool:
+	var enabled_from_project := bool(ProjectSettings.get_setting("application/config/use_external_content", false))
+	return OS.has_feature(EXTERNAL_CONTENT_FEATURE) or enabled_from_project
+
+func get_external_content_root() -> String:
+	var configured := String(ProjectSettings.get_setting("application/config/external_content_dir", EXTERNAL_CONTENT_DIR))
+	if configured.is_absolute_path():
+		return configured
+
+	var base_dir := ""
+	if OS.has_feature("editor"):
+		base_dir = ProjectSettings.globalize_path("res://")
+	else:
+		base_dir = OS.get_executable_path().get_base_dir()
+	if base_dir == "":
+		base_dir = ProjectSettings.globalize_path("res://")
+	return base_dir.path_join(configured)
+
+func resolve_content_path(path: String) -> String:
+	var clean_path := path.strip_edges()
+	if clean_path.begins_with("content://"):
+		var relative_path := clean_path.substr("content://".length()).replace("\\", "/")
+		return get_external_content_root().path_join(relative_path)
+	return clean_path
+
+func load_texture_resource(path: String) -> Texture2D:
+	var resolved_path := resolve_content_path(path)
+	if resolved_path == "":
+		return null
+	if resolved_path.begins_with("res://"):
+		if not ResourceLoader.exists(resolved_path):
+			return null
+		var loaded := load(resolved_path)
+		if loaded is Texture2D:
+			return loaded
+		return null
+
+	if not FileAccess.file_exists(resolved_path):
+		return null
+	var image := Image.new()
+	var err := image.load(resolved_path)
+	if err != OK or image.is_empty():
+		return null
+	return ImageTexture.create_from_image(image)
+
+func load_audio_resource(path: String, loop_stream: bool = false) -> AudioStream:
+	var resolved_path := resolve_content_path(path)
+	if resolved_path == "":
+		return null
+	for candidate: String in _audio_path_candidates(resolved_path):
+		var stream := _load_audio_stream(candidate, loop_stream)
+		if stream != null:
+			return stream
+	return null
 
 func load_background_manifest() -> void:
 	background_manifest.clear()
@@ -207,7 +305,7 @@ func apply_music_for_current_scene() -> void:
 
 func apply_music_for_scene(scene_path: String) -> void:
 	var scene_file := scene_path.get_file()
-	if scene_file == "MainMenu.tscn":
+	if scene_file == "MainMenu.tscn" or scene_file == "CreditsScreen.tscn":
 		play_menu_music()
 	elif scene_file == "FinalScreen.tscn":
 		if all_zones_completed():
@@ -245,20 +343,27 @@ func _load_audio_stream(path: String, loop_stream: bool) -> AudioStream:
 		bytes = FileAccess.get_file_as_bytes(path)
 		if _is_mp3_data(bytes):
 			stream = AudioStreamMP3.load_from_buffer(bytes)
-
-	if stream == null and ResourceLoader.exists(path):
-		var loaded := load(path)
-		if loaded is AudioStream:
-			stream = loaded
-
-	if stream == null and not bytes.is_empty():
-		if _is_ogg_data(bytes):
+		elif _is_ogg_data(bytes):
 			stream = AudioStreamOggVorbis.load_from_buffer(bytes)
 		elif _is_wav_data(bytes):
 			stream = _load_wav_from_bytes(bytes)
 
+	if stream == null and bytes.is_empty() and ResourceLoader.exists(path):
+		var loaded := load(path)
+		if loaded is AudioStream:
+			stream = loaded
+
 	_configure_stream_loop(stream, loop_stream)
 	return stream
+
+func _audio_path_candidates(audio_path: String) -> Array[String]:
+	var candidates: Array[String] = [audio_path]
+	var base := audio_path.get_basename()
+	for extension: String in [".ogg", ".mp3", ".wav"]:
+		var candidate: String = base + extension
+		if not candidates.has(candidate):
+			candidates.append(candidate)
+	return candidates
 
 func _configure_stream_loop(stream: AudioStream, loop_stream: bool) -> void:
 	if stream is AudioStreamOggVorbis:

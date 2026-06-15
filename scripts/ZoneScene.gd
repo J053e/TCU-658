@@ -25,7 +25,6 @@ var top_spacer: Control
 var status_panel: PanelContainer
 var status_label: Label
 var complete_button: Button
-var test_badge_button: Button
 
 var zone := {}
 
@@ -258,12 +257,6 @@ func _build_ui() -> void:
 	complete_button.pressed.connect(_on_CompleteButton_pressed)
 	actions.add_child(complete_button)
 
-	test_badge_button = Button.new()
-	test_badge_button.text = "Get Medal (Test)"
-	GameState.style_menu_button(test_badge_button, "yellow")
-	test_badge_button.pressed.connect(_on_TestBadgeButton_pressed)
-	actions.add_child(test_badge_button)
-
 	var back_button := Button.new()
 	back_button.text = "Back"
 	GameState.style_menu_button(back_button, "orange")
@@ -279,7 +272,6 @@ func _render_zone() -> void:
 
 	zone_title.text = zone.get("title", "Zone")
 	zone_description.text = zone.get("description", "")
-	_update_test_badge_button()
 
 	var is_school_gate := GameState.current_zone_id == "school_gate"
 	var is_classroom_survival := GameState.current_zone_id == "classroom_survival"
@@ -403,35 +395,6 @@ func _on_CompleteButton_pressed() -> void:
 	GameState.save_progress()
 	status_label.text = "Stamp earned! Zone complete."
 	complete_button.disabled = true
-	_update_test_badge_button()
-
-func _on_TestBadgeButton_pressed() -> void:
-	if zone.is_empty():
-		return
-	var unlocked := GameState.unlock_zone_badge(GameState.current_zone_id)
-	if unlocked:
-		status_label.text = "Medal earned for testing."
-		_update_test_badge_button()
-		GameState.show_badge_popup_or_continue(self, GameState.current_zone_id, func() -> void:
-			_render_zone()
-		)
-	else:
-		status_label.text = "Medal already earned for this zone."
-	_update_test_badge_button()
-
-func _update_test_badge_button() -> void:
-	if test_badge_button == null:
-		return
-	if zone.is_empty() or GameState.current_zone_id == "":
-		test_badge_button.disabled = true
-		test_badge_button.text = "Get Medal (Test)"
-		return
-	if GameState.is_zone_completed(GameState.current_zone_id):
-		test_badge_button.disabled = true
-		test_badge_button.text = "Medal Earned (Test)"
-	else:
-		test_badge_button.disabled = false
-		test_badge_button.text = "Get Medal (Test)"
 
 func _on_StartButton_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/SchoolGateQuiz.tscn")
