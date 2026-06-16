@@ -53,6 +53,19 @@
       "correct_index": 2,
       "correct_feedback": "Correct!",
       "incorrect_feedback": "First, raise your hand."
+    },
+    {
+      "id": "cl05",
+      "prompt": "The teacher is talking.\nWhat do you do?",
+      "image": "C:/Users/JosePC/Desktop/TCU/TCU-658/exports/windows_editable/win64/content/images/test.jpg",
+      "options": [
+        "Listen quietly.",
+        "Shout out the answer.",
+        "Play on your phone."
+      ],
+      "correct_index": 0,
+      "correct_feedback": "Well done!",
+      "incorrect_feedback": "You should listen quietly to the teacher."
     }
   ]
 }

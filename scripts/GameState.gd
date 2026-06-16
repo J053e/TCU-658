@@ -25,6 +25,7 @@ const MUSIC_CONTEXT_ZONE := "zone"
 const MUSIC_CONTEXT_VICTORY := "victory"
 const DEFAULT_MUSIC_VOLUME := 0.20
 const DEFAULT_SFX_VOLUME := 0.56
+const DEFAULT_VOICE_VOLUME := 0.90
 const ZONE_BADGE_PATHS := {
 	"school_gate": "res://assets/ui/badges/medal_01.png",
 	"classroom_survival": "res://assets/ui/badges/medal_02.png",
@@ -73,6 +74,8 @@ var current_music_context := ""
 var pending_music_after_fanfare := ""
 var music_volume_linear := DEFAULT_MUSIC_VOLUME
 var sfx_volume_linear := DEFAULT_SFX_VOLUME
+var voice_volume_linear := DEFAULT_VOICE_VOLUME
+var voice_players: Array[AudioStreamPlayer] = []
 var audio_settings_layer: CanvasLayer
 var pretty_font: SystemFont
 var background_manifest: Dictionary = {}
@@ -251,6 +254,31 @@ func set_sfx_volume(value: float, persist: bool = true) -> void:
 	if persist:
 		save_progress()
 
+func set_voice_volume(value: float, persist: bool = true) -> void:
+	voice_volume_linear = clampf(value, 0.0, 1.0)
+	_apply_voice_volume()
+	if persist:
+		save_progress()
+
+func register_voice_player(player: AudioStreamPlayer) -> void:
+	if player == null:
+		return
+	if not voice_players.has(player):
+		voice_players.append(player)
+	player.volume_db = _linear_volume_to_db(voice_volume_linear)
+
+func unregister_voice_player(player: AudioStreamPlayer) -> void:
+	if player == null:
+		return
+	voice_players.erase(player)
+
+func speak_voice_text(text: String, voice_id: String) -> void:
+	if not DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+		return
+	DisplayServer.tts_stop()
+	var volume := clampi(roundi(voice_volume_linear * 100.0), 0, 100)
+	DisplayServer.tts_speak(text, voice_id, volume)
+
 func _apply_music_volume() -> void:
 	var volume_db := _linear_volume_to_db(music_volume_linear)
 	if music_player != null:
@@ -264,6 +292,15 @@ func _apply_sfx_volume() -> void:
 		ui_click_player.volume_db = volume_db
 	if answer_sfx_player != null:
 		answer_sfx_player.volume_db = volume_db
+
+func _apply_voice_volume() -> void:
+	var volume_db := _linear_volume_to_db(voice_volume_linear)
+	for i in range(voice_players.size() - 1, -1, -1):
+		var player := voice_players[i]
+		if player == null or not is_instance_valid(player):
+			voice_players.remove_at(i)
+			continue
+		player.volume_db = volume_db
 
 func _linear_volume_to_db(value: float) -> float:
 	if value <= 0.001:
@@ -359,7 +396,7 @@ func _load_audio_stream(path: String, loop_stream: bool) -> AudioStream:
 func _audio_path_candidates(audio_path: String) -> Array[String]:
 	var candidates: Array[String] = [audio_path]
 	var base := audio_path.get_basename()
-	for extension: String in [".ogg", ".mp3", ".wav"]:
+	for extension: String in [".audio", ".ogg", ".mp3", ".wav"]:
 		var candidate: String = base + extension
 		if not candidates.has(candidate):
 			candidates.append(candidate)
@@ -521,7 +558,8 @@ func save_progress() -> void:
 		"challenge_results": challenge_results,
 		"pending_badge_popups": pending_badge_popups,
 		"music_volume": music_volume_linear,
-		"sfx_volume": sfx_volume_linear
+		"sfx_volume": sfx_volume_linear,
+		"voice_volume": voice_volume_linear
 	}
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -563,6 +601,8 @@ func load_progress() -> void:
 		music_volume_linear = clampf(float(payload_dict["music_volume"]), 0.0, 1.0)
 	if payload_dict.has("sfx_volume"):
 		sfx_volume_linear = clampf(float(payload_dict["sfx_volume"]), 0.0, 1.0)
+	if payload_dict.has("voice_volume"):
+		voice_volume_linear = clampf(float(payload_dict["voice_volume"]), 0.0, 1.0)
 
 func has_challenge_result(challenge_id: String) -> bool:
 	var result := get_challenge_result(challenge_id)
@@ -983,7 +1023,7 @@ func show_audio_settings_popup(root: Control) -> void:
 	layer.add_child(center)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(560, 330)
+	panel.custom_minimum_size = Vector2(560, 395)
 	panel.add_theme_stylebox_override("panel", _audio_settings_panel_style())
 	center.add_child(panel)
 
@@ -1010,6 +1050,9 @@ func show_audio_settings_popup(root: Control) -> void:
 	)
 	_add_volume_slider(content, "Effects Volume", sfx_volume_linear, func(value: float) -> void:
 		set_sfx_volume(value, false)
+	)
+	_add_volume_slider(content, "Voice Volume", voice_volume_linear, func(value: float) -> void:
+		set_voice_volume(value, false)
 	)
 
 	var close_button := Button.new()

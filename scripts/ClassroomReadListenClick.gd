@@ -41,6 +41,10 @@ func _ready() -> void:
 func _build_ui() -> void:
 	question_audio_player = AudioStreamPlayer.new()
 	add_child(question_audio_player)
+	GameState.register_voice_player(question_audio_player)
+	tree_exiting.connect(func() -> void:
+		GameState.unregister_voice_player(question_audio_player)
+	)
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -392,9 +396,8 @@ func _play_current_question_audio() -> void:
 		question_audio_player.stream = stream
 		question_audio_player.play()
 		return
-	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
-		DisplayServer.tts_stop()
-		DisplayServer.tts_speak(String(q.get("instruction", "")), tts_voice_id)
+	if GameState.is_external_content_enabled() and DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+		GameState.speak_voice_text(String(q.get("instruction", "")), tts_voice_id)
 
 func _load_question_audio_stream(audio_path: String) -> AudioStream:
 	return GameState.load_audio_resource(audio_path)

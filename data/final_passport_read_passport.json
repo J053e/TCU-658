@@ -11,35 +11,35 @@
   "questions": [
     {
       "prompt": "What is your name?",
-      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport/question_01_name.ogg",
+      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport_raw/question_01_name.audio",
       "answer_id": "name_line",
       "correct_feedback": "Correct!",
       "incorrect_feedback": "Incorrect. Listen again and choose the matching passport line."
     },
     {
       "prompt": "How old are you?",
-      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport/question_02_age.ogg",
+      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport_raw/question_02_age.audio",
       "answer_id": "age_line",
       "correct_feedback": "Correct!",
       "incorrect_feedback": "Incorrect. Listen again and choose the matching passport line."
     },
     {
       "prompt": "Where are you from?",
-      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport/question_03_country.ogg",
+      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport_raw/question_03_country.audio",
       "answer_id": "country_line",
       "correct_feedback": "Correct!",
       "incorrect_feedback": "Incorrect. Listen again and choose the matching passport line."
     },
     {
       "prompt": "Where do you live?",
-      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport/question_04_town.ogg",
+      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport_raw/question_04_town.audio",
       "answer_id": "town_line",
       "correct_feedback": "Correct!",
       "incorrect_feedback": "Incorrect. Listen again and choose the matching passport line."
     },
     {
       "prompt": "What grade are you in?",
-      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport/question_05_grade.ogg",
+      "audio_path": "res://assets/zones/zone_05_final_passport/audio/read_passport_raw/question_05_grade.audio",
       "answer_id": "grade_line",
       "correct_feedback": "Correct!",
       "incorrect_feedback": "Incorrect. Listen again and choose the matching passport line."

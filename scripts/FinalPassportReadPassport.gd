@@ -72,6 +72,10 @@ func _show_prerequisite_block() -> void:
 func _build_ui() -> void:
 	question_audio_player = AudioStreamPlayer.new()
 	add_child(question_audio_player)
+	GameState.register_voice_player(question_audio_player)
+	tree_exiting.connect(func() -> void:
+		GameState.unregister_voice_player(question_audio_player)
+	)
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -356,47 +360,11 @@ func _play_current_question_audio() -> void:
 		question_audio_player.stream = stream
 		question_audio_player.play()
 		return
-	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
-		DisplayServer.tts_stop()
-		DisplayServer.tts_speak(String(q.get("prompt", "")), tts_voice_id)
+	if GameState.is_external_content_enabled() and DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+		GameState.speak_voice_text(String(q.get("prompt", "")), tts_voice_id)
 
 func _load_question_audio_stream(audio_path: String) -> AudioStream:
-	if audio_path == "":
-		return null
-
-	for candidate: String in _audio_path_candidates(audio_path):
-		if FileAccess.file_exists(candidate):
-			var bytes := FileAccess.get_file_as_bytes(candidate)
-			if _is_mp3_data(bytes):
-				var mp3 := AudioStreamMP3.new()
-				mp3.data = bytes
-				return mp3
-			if _is_ogg_data(bytes):
-				return AudioStreamOggVorbis.load_from_buffer(bytes)
-
-		if ResourceLoader.exists(candidate):
-			var imported := load(candidate)
-			if imported is AudioStream:
-				return imported
-
-	return null
-
-func _audio_path_candidates(audio_path: String) -> Array[String]:
-	var candidates: Array[String] = [audio_path]
-	var base := audio_path.get_basename()
-	for extension: String in [".ogg", ".mp3"]:
-		var candidate: String = base + extension
-		if not candidates.has(candidate):
-			candidates.append(candidate)
-	return candidates
-
-func _is_mp3_data(bytes: PackedByteArray) -> bool:
-	if bytes.size() >= 3 and bytes[0] == 0x49 and bytes[1] == 0x44 and bytes[2] == 0x33:
-		return true
-	return bytes.size() >= 2 and bytes[0] == 0xFF and (bytes[1] & 0xE0) == 0xE0
-
-func _is_ogg_data(bytes: PackedByteArray) -> bool:
-	return bytes.size() >= 4 and bytes[0] == 0x4F and bytes[1] == 0x67 and bytes[2] == 0x67 and bytes[3] == 0x53
+	return GameState.load_audio_resource(audio_path)
 
 func _on_replay_audio_pressed() -> void:
 	if finished:

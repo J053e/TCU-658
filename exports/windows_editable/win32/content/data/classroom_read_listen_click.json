@@ -5,7 +5,7 @@
     {
       "id": "c01",
       "instruction": "Sit down.",
-      "audio_path": "res://assets/zones/zone_02_classroom_survival/audio/read_listen_click/question_01_sit_down.ogg",
+      "audio_path": "res://assets/zones/zone_02_classroom_survival/audio/read_listen_click_raw/question_01_sit_down.audio",
       "options": [
         {
           "label": "door",
@@ -17,7 +17,7 @@
         },
         {
           "label": "chair",
-          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/chair.png"
+          "image": "res://assets/zones/zone_02_classroom_survival/interactive/read_listen_click/options/Chair.png"
         }
       ],
       "correct_index": 2,
@@ -27,7 +27,7 @@
     {
       "id": "c02",
       "instruction": "Open your notebook.",
-      "audio_path": "res://assets/zones/zone_02_classroom_survival/audio/read_listen_click/question_02_open_notebook.ogg",
+      "audio_path": "res://assets/zones/zone_02_classroom_survival/audio/read_listen_click_raw/question_02_open_notebook.audio",
       "options": [
         {
           "label": "notebook",
@@ -49,7 +49,7 @@
     {
       "id": "c03",
       "instruction": "Raise your hand.",
-      "audio_path": "res://assets/zones/zone_02_classroom_survival/audio/read_listen_click/question_03_raise_hand.ogg",
+      "audio_path": "res://assets/zones/zone_02_classroom_survival/audio/read_listen_click_raw/question_03_raise_hand.audio",
       "options": [
         {
           "label": "student writing",
@@ -71,7 +71,7 @@
     {
       "id": "c04",
       "instruction": "Close the door.",
-      "audio_path": "res://assets/zones/zone_02_classroom_survival/audio/read_listen_click/question_04_close_door.ogg",
+      "audio_path": "res://assets/zones/zone_02_classroom_survival/audio/read_listen_click_raw/question_04_close_door.audio",
       "options": [
         {
           "label": "board",
@@ -93,7 +93,7 @@
     {
       "id": "c05",
       "instruction": "Stand up.",
-      "audio_path": "res://assets/zones/zone_02_classroom_survival/audio/read_listen_click/question_05_stand_up.ogg",
+      "audio_path": "res://assets/zones/zone_02_classroom_survival/audio/read_listen_click_raw/question_05_stand_up.audio",
       "options": [
         {
           "label": "student standing",
@@ -115,7 +115,7 @@
     {
       "id": "c06",
       "instruction": "Look at the board.",
-      "audio_path": "res://assets/zones/zone_02_classroom_survival/audio/read_listen_click/question_06_look_board.ogg",
+      "audio_path": "res://assets/zones/zone_02_classroom_survival/audio/read_listen_click_raw/question_06_look_board.audio",
       "options": [
         {
           "label": "board",
