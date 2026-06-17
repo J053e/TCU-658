@@ -18,16 +18,11 @@ const VALID_PROVINCES := [
 ]
 
 const VALID_GRADES := [
-	"Sixth",
 	"Seventh",
 	"Eighth",
 	"Ninth",
 	"Tenth",
-	"Eleventh",
-	"Twelfth",
-	"Thirteenth",
-	"Fourteenth",
-	"Fifteenth"
+	"Eleventh"
 ]
 
 var title_label: Label
@@ -566,7 +561,7 @@ func _evaluate_profile() -> Dictionary:
 	if String(values["age"]) != "" and not String(values["age"]).is_valid_int():
 		issues.append("Age: must be numeric.")
 	if String(values["grade"]) != "" and not _is_valid_grade(String(values["grade"])):
-		issues.append("Grade: choose one value from Sixth to Fifteenth.")
+		issues.append("Grade: choose one value from Seventh to Eleventh.")
 	if String(values["province"]) != "" and not _is_valid_province(String(values["province"])):
 		issues.append("Province: choose a valid Costa Rica province.")
 

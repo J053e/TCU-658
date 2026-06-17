@@ -17,7 +17,7 @@
     },
     {
       "id": "q02_student_arrive",
-      "prompt": "A student says hello as you arrive.",
+      "prompt": "A student says \"hello\" as you arrive.",
       "options": [
         "Good night.",
         "Hi!",

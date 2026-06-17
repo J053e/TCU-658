@@ -255,7 +255,7 @@ func _build_profile_setup_dialog() -> void:
 	form.add_child(_make_form_label("Age"))
 	profile_age_select = OptionButton.new()
 	profile_age_select.add_item("Select age")
-	for age in range(10, 19):
+	for age in range(13, 19):
 		profile_age_select.add_item(str(age))
 	var saved_age := String(GameState.profile.get("age", "")).strip_edges()
 	if saved_age != "":

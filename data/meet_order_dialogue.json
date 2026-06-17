@@ -32,7 +32,7 @@
       "id": "dialogue_c",
       "label": "Dialogue C",
       "blocks": [
-        "Staff: Hello! Welcome to the youth club.",
+        "Staff: Hello! Welcome to the Youth Club.",
         "Student: Hi! I'd like to join.",
         "Staff: Great. How old are you?",
         "Student: I am twelve years old.",

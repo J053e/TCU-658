@@ -1,4 +1,4 @@
-﻿extends Control
+extends Control
 
 const INTRO_BG_PATH := "res://assets/ui/backgrounds/intro_screen_bg.png"
 const INTRO_BADGE_ORDER := [
@@ -45,7 +45,7 @@ func _build_ui() -> void:
 	intro_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	intro_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	intro_text.text = "Welcome to school! Today is your first day and you're the new student. Time to start talking! Choose the right words, follow simple instructions, and complete your English Passport.\n\nGame Objective\nCollect 5 stamps to complete your English Passport.\n\nHow to Play\nRead or listen to each situation.\nChoose the best response.\nDrag and drop when necessary.\nComplete sentences with helpful hints.\nEarn a stamp in every zone."
+	intro_text.text = "Welcome to school! Today is your first day and you are the new student. Time to start talking! Choose the right words, follow simple instructions, and complete your English Passport.\n\nGame Objective\nCollect 5 stamps to complete your English Passport.\n\nHow to Play\nRead or listen to each situation.\nChoose the best response.\nDrag and drop when necessary.\nComplete sentences with helpful hints.\nEarn a stamp in every zone."
 	GameState.style_label(intro_text, 20, false)
 	root_vbox.add_child(intro_text)
 

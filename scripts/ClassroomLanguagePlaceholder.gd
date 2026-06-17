@@ -35,4 +35,3 @@ func _build_ui() -> void:
 
 func _on_back_pressed() -> void:
 	GameState.change_scene_with_transition("res://scenes/ZoneScene.tscn", true)
-

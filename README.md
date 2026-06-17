@@ -1,4 +1,4 @@
-﻿# TCU-658
+# TCU-658
 
 Base de proyecto para el juego educativo **English Passport: Here I Am!**, orientado a estudiantes de secundaria que están aprendiendo inglés.
 
